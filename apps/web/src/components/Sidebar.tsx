@@ -11,6 +11,7 @@ export function Sidebar() {
   const select = useStore((s) => s.selectConversation);
   const del = useStore((s) => s.deleteConversation);
   const togglePin = useStore((s) => s.togglePin);
+  const autoTitle = useStore((s) => s.autoTitle);
   const newConv = useStore((s) => s.newConversation);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const settings = useStore((s) => s.settings);
@@ -63,13 +64,13 @@ export function Sidebar() {
           <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] px-1 pt-1 pb-0.5">Pinned</div>
         )}
         {pinned.map((c) => (
-          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} />
+          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} autoTitle={autoTitle} />
         ))}
         {pinned.length > 0 && rest.length > 0 && (
           <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] px-1 pt-2 pb-0.5">Recent</div>
         )}
         {rest.map((c) => (
-          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} />
+          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} autoTitle={autoTitle} />
         ))}
       </div>
 
@@ -100,12 +101,14 @@ function ConvRow({
   select,
   del,
   togglePin,
+  autoTitle,
 }: {
   c: Conversation;
   activeId: string | null;
   select: (id: string) => void;
   del: (id: string) => void;
   togglePin: (id: string) => void;
+  autoTitle: (id: string) => Promise<void>;
 }) {
   return (
     <div
@@ -118,6 +121,13 @@ function ConvRow({
     >
       {c.pinned && <span className="text-[var(--color-accent-fg)] text-xs">📌</span>}
       <span className="flex-1 truncate">{c.title}</span>
+      <button
+        onClick={(e) => { e.stopPropagation(); autoTitle(c.id); }}
+        className="opacity-0 group-hover:opacity-100 text-[var(--color-muted)] hover:text-[var(--color-accent-fg)]"
+        title="Auto-title with AI"
+      >
+        ✨
+      </button>
       <button
         onClick={(e) => { e.stopPropagation(); togglePin(c.id); }}
         className="opacity-0 group-hover:opacity-100 text-[var(--color-muted)] hover:text-[var(--color-accent-fg)]"

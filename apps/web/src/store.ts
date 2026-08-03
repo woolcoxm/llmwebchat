@@ -61,6 +61,10 @@ interface AppState {
   renameConversation: (id: string, title: string) => void;
   togglePin: (id: string) => void;
   setConvSettings: (id: string, patch: { systemPrompt?: string; model?: string; temperature?: number }) => void;
+  /** Duplicate the active branch of a conversation into a new conversation. */
+  forkConversation: (convId: string) => string | null;
+  /** Auto-generate a short title for a conversation via the model. */
+  autoTitle: (convId: string) => Promise<void>;
   addMessage: (convId: string, msg: ChatMessage) => void;
   patchMessage: (convId: string, msgId: string, patch: Partial<ChatMessage>) => void;
   /** Walk root → active tip for a conversation. */
@@ -275,6 +279,63 @@ export const useStore = create<AppState>()(
         set((st) => ({
           conversations: st.conversations.map((c) => (c.id === id ? { ...c, ...patch } : c)),
         }));
+      },
+      forkConversation(convId) {
+        const st = get();
+        const src = st.conversations.find((c) => c.id === convId);
+        const path = st.activePath(convId);
+        if (!src || !path.length) return null;
+        const newId = nanoid();
+        const idMap = new Map<string, string>();
+        for (const m of path) idMap.set(m.id, nanoid());
+        const copied: ChatMessage[] = path.map((m) => ({
+          ...m,
+          id: idMap.get(m.id)!,
+          parentId: m.parentId ? idMap.get(m.parentId) ?? null : null,
+        }));
+        const conv: Conversation = {
+          id: newId,
+          title: `Fork: ${src.title}`.slice(0, 60),
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          systemPrompt: src.systemPrompt,
+          model: src.model,
+          temperature: src.temperature,
+        };
+        set((s) => ({
+          conversations: [conv, ...s.conversations],
+          activeId: newId,
+          messagesByConv: { ...s.messagesByConv, [newId]: copied },
+          activeChild: { ...s.activeChild, [newId]: {} },
+        }));
+        return newId;
+      },
+      async autoTitle(convId) {
+        const st = get();
+        const settings = st.settings;
+        const conv = st.conversations.find((c) => c.id === convId);
+        const msgs = st.messagesByConv[convId] ?? [];
+        const firstUser = msgs.find((m) => m.role === "user");
+        if (!settings || !conv || !firstUser) return;
+        let title = "";
+        const controller = streamChat(
+          {
+            messages: [
+              { id: "t1", role: "user", content: `Reply with ONLY a concise 3-6 word title (no quotes, no punctuation at end) for a conversation that starts with: "${firstUser.content.slice(0, 300)}"`, createdAt: 1 },
+            ],
+            providerId: settings.activeProviderId,
+            model: conv.model ?? settings.activeModel,
+            reasoningEffort: "none",
+            allowTools: false,
+          },
+          (ev) => { if (ev.type === "delta") title += ev.content; },
+          () => {},
+          () => {
+            const clean = title.replace(/["'<>*#\n]/g, "").trim().slice(0, 60);
+            if (clean) get().renameConversation(convId, clean);
+          },
+        );
+        void controller;
       },
       addMessage(convId, msg) {
         set((st) => ({

@@ -14,6 +14,8 @@ export function TreeView() {
   const msgs = useStore((s) => (activeId ? s.messagesByConv[activeId] ?? [] : []));
   const activeChildMap = useStore((s) => (activeId ? s.activeChild[activeId] ?? {} : {}));
   const activate = useStore((s) => s.activatePathTo);
+  const fork = useStore((s) => s.forkConversation);
+  const autoTitle = useStore((s) => s.autoTitle);
 
   const activePath = useMemo(() => computePath(msgs, activeChildMap), [msgs, activeChildMap]);
   const activeIds = useMemo(() => new Set(activePath.map((m) => m.id)), [activePath]);
@@ -28,7 +30,9 @@ export function TreeView() {
       <header className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--color-border)]">
         <span className="font-medium">🌳 Conversation tree</span>
         <span className="text-xs text-[var(--color-muted)]">{msgs.length} messages · {countLeaves(tree)} branches</span>
-        <button onClick={() => setOpen(false)} className="ml-auto text-[var(--color-muted)] hover:text-[var(--color-fg)]">✕ close</button>
+        <button onClick={() => { if (activeId) autoTitle(activeId); }} className="ml-auto text-xs text-[var(--color-muted)] hover:text-[var(--color-accent-fg)]" title="Auto-title">✨ title</button>
+        <button onClick={() => { if (activeId) { fork(activeId); setOpen(false); } }} className="text-xs text-[var(--color-muted)] hover:text-[var(--color-fg)]" title="Fork active branch into a new conversation">⑂ fork</button>
+        <button onClick={() => setOpen(false)} className="text-[var(--color-muted)] hover:text-[var(--color-fg)]">✕ close</button>
       </header>
       <div className="flex-1 overflow-auto p-4">
         {tree.length === 0 ? (

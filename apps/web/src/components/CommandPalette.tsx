@@ -19,11 +19,18 @@ export function CommandPalette() {
 
   const st = useStore();
   const streaming = !!st.stream;
+  const activeId = st.activeId;
 
   const commands = useMemo<Command[]>(() => {
     const close = () => setOpen(false);
     return [
       { id: "new", label: "New chat", keys: "⌘N", run: () => { st.newConversation(); close(); } },
+      ...(activeId
+        ? [
+            { id: "fork", label: "Fork conversation (active branch → new chat)", run: () => { st.forkConversation(activeId); close(); } },
+            { id: "autotitle", label: "✨ Auto-title this conversation", run: () => { void st.autoTitle(activeId); close(); } },
+          ]
+        : []),
       { id: "sidebar", label: st.sidebarOpen ? "Hide sidebar" : "Show sidebar", keys: "⌘B", run: () => { st.toggleSidebar(); close(); } },
       { id: "artifacts", label: st.artifactOpen ? "Hide Artifacts panel" : "Show Artifacts panel", keys: "⌘J", run: () => { st.setArtifactOpen(!st.artifactOpen); close(); } },
       { id: "settings", label: "Open settings", keys: "⌘,", run: () => { st.setSettingsOpen(true); close(); } },
@@ -50,7 +57,7 @@ export function CommandPalette() {
         hint: st.reasoningEffort === "none" ? "current" : undefined,
       },
     ];
-  }, [st, streaming, setOpen]);
+  }, [st, streaming, setOpen, activeId]);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
