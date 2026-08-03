@@ -69,6 +69,10 @@ interface AppState {
   exportJSON: () => void;
   /** Merge a JSON backup into the store. */
   importJSON: (data: unknown) => boolean;
+  /** Summarize a conversation via the model (returns the summary text). */
+  summarize: (convId: string) => Promise<string | null>;
+  /** Summarize the active path and start a fresh chat seeded with the summary. */
+  compactAndContinue: (convId: string) => Promise<void>;
   addMessage: (convId: string, msg: ChatMessage) => void;
   patchMessage: (convId: string, msgId: string, patch: Partial<ChatMessage>) => void;
   /** Walk root → active tip for a conversation. */
@@ -380,6 +384,49 @@ export const useStore = create<AppState>()(
           activeChild: { ...st.activeChild, ...newChild },
         }));
         return true;
+      },
+      async summarize(convId) {
+        const st = get();
+        const settings = st.settings;
+        const conv = st.conversations.find((c) => c.id === convId);
+        const path = st.activePath(convId);
+        if (!settings || !conv || path.length < 2) return null;
+        const transcript = path
+          .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content.slice(0, 1500)}`)
+          .join("\n\n")
+          .slice(0, 12000);
+        let summary = "";
+        await new Promise<void>((resolve) => {
+          streamChat(
+            {
+              messages: [
+                { id: "s1", role: "user", content: `Summarize the following conversation concisely (key facts, decisions, open threads) in <= 200 words. Output only the summary.\n\n${transcript}`, createdAt: 1 },
+              ],
+              providerId: settings.activeProviderId,
+              model: conv.model ?? settings.activeModel,
+              reasoningEffort: "low",
+              allowTools: false,
+            },
+            (ev) => { if (ev.type === "delta") summary += ev.content; },
+            () => {},
+            () => resolve(),
+          );
+        });
+        return summary.trim() || null;
+      },
+      async compactAndContinue(convId) {
+        const st = get();
+        const conv = st.conversations.find((c) => c.id === convId);
+        const summary = await get().summarize(convId);
+        if (!summary || !conv) return;
+        const newId = get().newConversation();
+        set((s) => ({
+          conversations: s.conversations.map((c) =>
+            c.id === newId
+              ? { ...c, title: `Continued: ${conv.title}`.slice(0, 60), systemPrompt: `Summary of our previous conversation (for continuity):\n${summary}` }
+              : c,
+          ),
+        }));
       },
       addMessage(convId, msg) {
         set((st) => ({
