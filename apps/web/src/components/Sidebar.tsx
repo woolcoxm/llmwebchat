@@ -12,6 +12,7 @@ export function Sidebar() {
   const del = useStore((s) => s.deleteConversation);
   const togglePin = useStore((s) => s.togglePin);
   const autoTitle = useStore((s) => s.autoTitle);
+  const renameConversation = useStore((s) => s.renameConversation);
   const newConv = useStore((s) => s.newConversation);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const settings = useStore((s) => s.settings);
@@ -64,13 +65,13 @@ export function Sidebar() {
           <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] px-1 pt-1 pb-0.5">Pinned</div>
         )}
         {pinned.map((c) => (
-          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} autoTitle={autoTitle} />
+          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} autoTitle={autoTitle} rename={renameConversation} />
         ))}
         {pinned.length > 0 && rest.length > 0 && (
           <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] px-1 pt-2 pb-0.5">Recent</div>
         )}
         {rest.map((c) => (
-          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} autoTitle={autoTitle} />
+          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} autoTitle={autoTitle} rename={renameConversation} />
         ))}
       </div>
 
@@ -102,6 +103,7 @@ function ConvRow({
   del,
   togglePin,
   autoTitle,
+  rename,
 }: {
   c: Conversation;
   activeId: string | null;
@@ -109,10 +111,19 @@ function ConvRow({
   del: (id: string) => void;
   togglePin: (id: string) => void;
   autoTitle: (id: string) => Promise<void>;
+  rename: (id: string, title: string) => void;
 }) {
+  const [renaming, setRenaming] = useState(false);
+  const [name, setName] = useState(c.title);
+  const commit = () => {
+    const t = name.trim();
+    if (t && t !== c.title) rename(c.id, t);
+    setRenaming(false);
+  };
   return (
     <div
       onClick={() => select(c.id)}
+      onDoubleClick={(e) => { e.stopPropagation(); setName(c.title); setRenaming(true); }}
       className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm ${
         c.id === activeId
           ? "bg-[var(--color-surface-2)] text-[var(--color-fg)]"
@@ -120,7 +131,19 @@ function ConvRow({
       }`}
     >
       {c.pinned && <span className="text-[var(--color-accent-fg)] text-xs">📌</span>}
-      <span className="flex-1 truncate">{c.title}</span>
+      {renaming ? (
+        <input
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onClick={(e) => e.stopPropagation()}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === "Enter") commit(); if (e.key === "Escape") setRenaming(false); }}
+          className="flex-1 bg-[var(--color-bg)] border border-[var(--color-accent)] rounded px-1 py-0.5 text-sm outline-none"
+        />
+      ) : (
+        <span className="flex-1 truncate" title="Double-click to rename">{c.title}</span>
+      )}
       <button
         onClick={(e) => { e.stopPropagation(); autoTitle(c.id); }}
         className="opacity-0 group-hover:opacity-100 text-[var(--color-muted)] hover:text-[var(--color-accent-fg)]"
