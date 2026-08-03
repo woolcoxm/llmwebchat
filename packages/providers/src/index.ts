@@ -65,7 +65,7 @@ function buildHeaders(provider: ProviderConfig): Record<string, string> {
  * reasoning on input, so we drop it). Attachments with image data URLs become
  * multimodal content parts.
  */
-function toWireMessages(
+export function toWireMessages(
   messages: ChatMessage[],
 ): Array<Record<string, unknown>> {
   const out: Array<Record<string, unknown>> = [];
