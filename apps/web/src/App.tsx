@@ -5,6 +5,7 @@ import { SettingsModal } from "./components/SettingsModal.js";
 import { ArtifactPanel } from "./components/ArtifactPanel.js";
 import { CommandPalette } from "./components/CommandPalette.js";
 import { Arena } from "./components/Arena.js";
+import { Snippets } from "./components/Snippets.js";
 import { useStore } from "./store.js";
 
 export default function App() {
@@ -57,6 +58,7 @@ export default function App() {
       <SettingsModal />
       <CommandPalette />
       <Arena />
+      <Snippets />
     </div>
   );
 }

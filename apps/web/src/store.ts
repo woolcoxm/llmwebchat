@@ -36,6 +36,12 @@ interface ArenaCol {
   controller?: AbortController;
 }
 
+interface PromptTemplate {
+  id: string;
+  title: string;
+  body: string;
+}
+
 interface AppState {
   /* settings (server-backed) */
   settings: Settings | null;
@@ -87,6 +93,15 @@ interface AppState {
   setArtifactOpen: (b: boolean) => void;
   paletteOpen: boolean;
   setPaletteOpen: (b: boolean) => void;
+
+  /* prompt snippets */
+  snippetsOpen: boolean;
+  setSnippetsOpen: (b: boolean) => void;
+  promptTemplates: PromptTemplate[];
+  addPromptTemplate: (title: string, body: string) => void;
+  removePromptTemplate: (id: string) => void;
+  pendingInsert: string | null;
+  setPendingInsert: (s: string | null) => void;
 
   /* arena (multi-model compare) */
   arenaOpen: boolean;
@@ -405,6 +420,21 @@ export const useStore = create<AppState>()(
       setPaletteOpen(b) {
         set({ paletteOpen: b });
       },
+      snippetsOpen: false,
+      setSnippetsOpen(b) {
+        set({ snippetsOpen: b });
+      },
+      promptTemplates: [],
+      addPromptTemplate(title, body) {
+        set((st) => ({ promptTemplates: [...st.promptTemplates, { id: nanoid(), title, body }] }));
+      },
+      removePromptTemplate(id) {
+        set((st) => ({ promptTemplates: st.promptTemplates.filter((p) => p.id !== id) }));
+      },
+      pendingInsert: null,
+      setPendingInsert(s) {
+        set({ pendingInsert: s });
+      },
 
       arenaOpen: false,
       setArenaOpen(b) {
@@ -491,6 +521,7 @@ export const useStore = create<AppState>()(
         reasoningEffort: s.reasoningEffort,
         allowTools: s.allowTools,
         sidebarOpen: s.sidebarOpen,
+        promptTemplates: s.promptTemplates,
       }),
     },
   ),

@@ -31,6 +31,18 @@ export function Composer() {
     ta.style.height = Math.min(ta.scrollHeight, 240) + "px";
   }, [text]);
 
+  // consume snippet inserts
+  const pendingInsert = useStore((s) => s.pendingInsert);
+  const setPendingInsert = useStore((s) => s.setPendingInsert);
+  useEffect(() => {
+    if (pendingInsert != null) {
+      setText((cur) => (cur ? cur + "\n\n" : "") + pendingInsert);
+      setPendingInsert(null);
+      setTimeout(() => taRef.current?.focus(), 0);
+    }
+  }, [pendingInsert, setPendingInsert]);
+  const setSnippetsOpen = useStore((s) => s.setSnippetsOpen);
+
   const submit = () => {
     const t = text.trim();
     if ((!t && attachments.length === 0) || streaming) return;
@@ -141,6 +153,13 @@ export function Composer() {
                 🎤
               </button>
             )}
+            <button
+              onClick={() => setSnippetsOpen(true)}
+              className="ml-0.5 mb-2.5 w-8 h-8 grid place-items-center text-[var(--color-muted)] hover:text-[var(--color-fg)]"
+              title="Prompt snippets"
+            >
+              ✨
+            </button>
           <textarea
             ref={taRef}
             value={text}
