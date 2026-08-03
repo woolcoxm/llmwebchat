@@ -136,6 +136,8 @@ export interface Conversation {
   updatedAt: number;
   /** Pinned to the top of the sidebar. */
   pinned?: boolean;
+  /** Colored organizational tags. */
+  tags?: string[];
   /** Arbitrary metadata (tags, folder, etc.) */
   meta?: Record<string, unknown>;
 }

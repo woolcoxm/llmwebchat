@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useStore } from "../store.js";
 import { ThemePicker } from "./ThemePicker.js";
 import type { Conversation } from "@llmwebchat/shared";
@@ -17,15 +17,19 @@ export function Sidebar() {
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const settings = useStore((s) => s.settings);
   const [query, setQuery] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const toggleTag = useStore((s) => s.toggleTag);
 
   const q = query.trim().toLowerCase();
-  const filtered = q
+  const allTags = useMemo(() => Array.from(new Set(conversations.flatMap((c) => c.tags ?? []))).sort(), [conversations]);
+  let filtered = q
     ? conversations.filter((c) => {
         if (c.title.toLowerCase().includes(q)) return true;
         const msgs = messagesByConv[c.id] ?? [];
         return msgs.some((m) => (m.content ?? "").toLowerCase().includes(q));
       })
     : conversations;
+  if (activeTag) filtered = filtered.filter((c) => (c.tags ?? []).includes(activeTag));
   const pinned = filtered.filter((c) => c.pinned);
   const rest = filtered.filter((c) => !c.pinned);
 
@@ -53,6 +57,20 @@ export function Sidebar() {
           placeholder="Search conversations…"
           className="w-full mb-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[var(--color-accent)]"
         />
+        {allTags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {allTags.map((t) => (
+              <button
+                key={t}
+                onClick={() => setActiveTag(activeTag === t ? null : t)}
+                className="text-[10px] px-2 py-0.5 rounded-full border"
+                style={tagStyle(t, activeTag === t)}
+              >
+                #{t}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
@@ -65,13 +83,13 @@ export function Sidebar() {
           <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] px-1 pt-1 pb-0.5">Pinned</div>
         )}
         {pinned.map((c) => (
-          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} autoTitle={autoTitle} rename={renameConversation} />
+          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} autoTitle={autoTitle} rename={renameConversation} toggleTag={toggleTag} activeTag={activeTag} />
         ))}
         {pinned.length > 0 && rest.length > 0 && (
           <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] px-1 pt-2 pb-0.5">Recent</div>
         )}
         {rest.map((c) => (
-          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} autoTitle={autoTitle} rename={renameConversation} />
+          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} autoTitle={autoTitle} rename={renameConversation} toggleTag={toggleTag} activeTag={activeTag} />
         ))}
       </div>
 
@@ -96,6 +114,19 @@ export function Sidebar() {
   );
 }
 
+const TAG_COLORS = ["#6366f1", "#10b981", "#f59e0b", "#f43f5e", "#06b6d4", "#8b5cf6", "#ec4899"];
+function tagStyle(tag: string, active: boolean): React.CSSProperties {
+  let h = 0;
+  for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
+  const c = TAG_COLORS[h % TAG_COLORS.length];
+  return active ? { background: c, color: "#fff", borderColor: c } : { background: `${c}22`, color: c, borderColor: `${c}55` };
+}
+function tagDot(tag: string): string {
+  let h = 0;
+  for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
+  return TAG_COLORS[h % TAG_COLORS.length];
+}
+
 function ConvRow({
   c,
   activeId,
@@ -104,6 +135,8 @@ function ConvRow({
   togglePin,
   autoTitle,
   rename,
+  toggleTag,
+  activeTag,
 }: {
   c: Conversation;
   activeId: string | null;
@@ -112,6 +145,8 @@ function ConvRow({
   togglePin: (id: string) => void;
   autoTitle: (id: string) => Promise<void>;
   rename: (id: string, title: string) => void;
+  toggleTag: (id: string, tag: string) => void;
+  activeTag: string | null;
 }) {
   const [renaming, setRenaming] = useState(false);
   const [name, setName] = useState(c.title);
@@ -131,6 +166,9 @@ function ConvRow({
       }`}
     >
       {c.pinned && <span className="text-[var(--color-accent-fg)] text-xs">📌</span>}
+      {(c.tags ?? []).map((t) => (
+        <span key={t} className="w-2 h-2 rounded-full shrink-0" style={{ background: tagDot(t) }} title={`#${t}`} />
+      ))}
       {renaming ? (
         <input
           autoFocus
@@ -144,6 +182,13 @@ function ConvRow({
       ) : (
         <span className="flex-1 truncate" title="Double-click to rename">{c.title}</span>
       )}
+      <button
+        onClick={(e) => { e.stopPropagation(); const t = window.prompt("Add tag (or remove by entering an existing one):", (c.tags ?? [])[0] ?? ""); if (t && t.trim()) toggleTag(c.id, t.trim().toLowerCase()); }}
+        className="opacity-0 group-hover:opacity-100 text-[var(--color-muted)] hover:text-[var(--color-accent-fg)]"
+        title="Add/remove tag"
+      >
+        #
+      </button>
       <button
         onClick={(e) => { e.stopPropagation(); autoTitle(c.id); }}
         className="opacity-0 group-hover:opacity-100 text-[var(--color-muted)] hover:text-[var(--color-accent-fg)]"

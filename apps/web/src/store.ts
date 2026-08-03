@@ -60,6 +60,7 @@ interface AppState {
   deleteConversation: (id: string) => void;
   renameConversation: (id: string, title: string) => void;
   togglePin: (id: string) => void;
+  toggleTag: (id: string, tag: string) => void;
   setConvSettings: (id: string, patch: { systemPrompt?: string; model?: string; temperature?: number }) => void;
   /** Duplicate the active branch of a conversation into a new conversation. */
   forkConversation: (convId: string) => string | null;
@@ -288,6 +289,15 @@ export const useStore = create<AppState>()(
       },
       togglePin(id) {
         set((st) => ({ conversations: st.conversations.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)) }));
+      },
+      toggleTag(id, tag) {
+        set((st) => ({
+          conversations: st.conversations.map((c) => {
+            if (c.id !== id) return c;
+            const has = (c.tags ?? []).includes(tag);
+            return { ...c, tags: has ? (c.tags ?? []).filter((t) => t !== tag) : [...(c.tags ?? []), tag] };
+          }),
+        }));
       },
       setConvSettings(id, patch) {
         set((st) => ({
