@@ -14,6 +14,7 @@ export function ChatView() {
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const artifactOpen = useStore((s) => s.artifactOpen);
   const setArtifactOpen = useStore((s) => s.setArtifactOpen);
+  const setArenaOpen = useStore((s) => s.setArenaOpen);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,6 +42,13 @@ export function ChatView() {
           title="Toggle Artifacts panel (⌘J)"
         >
           ◧ Artifacts
+        </button>
+        <button
+          onClick={() => setArenaOpen(true)}
+          className="px-2 py-1 rounded-md text-xs border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"
+          title="Multi-model Arena"
+        >
+          ⚔ Arena
         </button>
         <button
           onClick={() => useStore.getState().setPaletteOpen(true)}

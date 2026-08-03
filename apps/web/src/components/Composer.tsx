@@ -1,12 +1,16 @@
 import { useRef, useState, useEffect } from "react";
 import { useStore } from "../store.js";
 import { ModelPicker } from "./ModelPicker.js";
+import type { Attachment } from "@llmwebchat/shared";
+import { nanoid } from "nanoid";
 
 const REASONING_LEVELS = ["none", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
 
 export function Composer() {
   const [text, setText] = useState("");
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   const send = useStore((s) => s.send);
   const stop = useStore((s) => s.stop);
   const streaming = useStore((s) => !!s.stream);
@@ -25,9 +29,27 @@ export function Composer() {
 
   const submit = () => {
     const t = text.trim();
-    if (!t || streaming) return;
+    if ((!t && attachments.length === 0) || streaming) return;
     setText("");
-    void send(t);
+    const atts = attachments.length ? attachments : undefined;
+    setAttachments([]);
+    void send(t, atts);
+  };
+
+  const onFiles = (files: FileList | null) => {
+    if (!files) return;
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+      if (file.size > 8 * 1024 * 1024) return; // 8MB cap per image
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAttachments((a) => [
+          ...a,
+          { id: nanoid(), type: file.type, name: file.name, url: reader.result as string },
+        ]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
 
   return (
@@ -61,6 +83,37 @@ export function Composer() {
         </div>
 
         <div className="relative rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus-within:border-[var(--color-accent)]/60 transition-colors">
+          {attachments.length > 0 && (
+            <div className="flex flex-wrap gap-2 p-2 pb-0">
+              {attachments.map((a) => (
+                <div key={a.id} className="relative group">
+                  <img src={a.url} alt={a.name} className="h-16 w-16 object-cover rounded-md border border-[var(--color-border)]" />
+                  <button
+                    onClick={() => setAttachments((arr) => arr.filter((x) => x.id !== a.id))}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border)] text-xs grid place-items-center opacity-0 group-hover:opacity-100"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }}
+          />
+          <div className="flex items-end">
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="ml-1 mb-2.5 w-8 h-8 grid place-items-center text-[var(--color-muted)] hover:text-[var(--color-fg)]"
+              title="Attach images"
+            >
+              📎
+            </button>
           <textarea
             ref={taRef}
             value={text}
@@ -73,9 +126,9 @@ export function Composer() {
             }}
             rows={1}
             placeholder="Message the model…  (Enter to send, Shift+Enter for newline)"
-            className="w-full resize-none bg-transparent px-4 py-3 pr-14 outline-none text-[var(--color-fg)] placeholder:text-[var(--color-muted)]"
+            className="flex-1 resize-none bg-transparent px-3 py-3 pr-2 outline-none text-[var(--color-fg)] placeholder:text-[var(--color-muted)]"
           />
-          <div className="absolute right-2 bottom-2">
+          <div className="flex items-center mr-1 mb-1.5">
             {streaming ? (
               <button
                 onClick={stop}
@@ -87,13 +140,14 @@ export function Composer() {
             ) : (
               <button
                 onClick={submit}
-                disabled={!text.trim()}
+                disabled={!text.trim() && attachments.length === 0}
                 className="w-9 h-9 rounded-lg bg-[var(--color-accent)] text-white grid place-items-center disabled:opacity-30 hover:opacity-90"
                 title="Send"
               >
                 ↑
               </button>
             )}
+          </div>
           </div>
         </div>
         <p className="text-center text-[11px] text-[var(--color-muted)]/70 mt-2">

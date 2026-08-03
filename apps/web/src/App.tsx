@@ -4,6 +4,7 @@ import { ChatView } from "./components/ChatView.js";
 import { SettingsModal } from "./components/SettingsModal.js";
 import { ArtifactPanel } from "./components/ArtifactPanel.js";
 import { CommandPalette } from "./components/CommandPalette.js";
+import { Arena } from "./components/Arena.js";
 import { useStore } from "./store.js";
 
 export default function App() {
@@ -55,6 +56,7 @@ export default function App() {
       <ArtifactPanel />
       <SettingsModal />
       <CommandPalette />
+      <Arena />
     </div>
   );
 }

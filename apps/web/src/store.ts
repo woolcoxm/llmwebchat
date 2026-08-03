@@ -23,6 +23,19 @@ interface StreamState {
   controller: AbortController;
 }
 
+interface ArenaModel {
+  providerId: string;
+  model: string;
+}
+interface ArenaCol {
+  providerId: string;
+  model: string;
+  content: string;
+  reasoning: string;
+  status: "streaming" | "done" | "error" | "stopped";
+  controller?: AbortController;
+}
+
 interface AppState {
   /* settings (server-backed) */
   settings: Settings | null;
@@ -57,7 +70,7 @@ interface AppState {
   setAllowTools: (b: boolean) => void;
 
   /* actions that produce new branches */
-  send: (text: string) => Promise<void>;
+  send: (text: string, attachments?: ChatMessage["attachments"]) => Promise<void>;
   regenerate: (assistantMessageId: string) => Promise<void>;
   editResubmit: (userMessageId: string, newText: string) => Promise<void>;
 
@@ -74,6 +87,20 @@ interface AppState {
   setArtifactOpen: (b: boolean) => void;
   paletteOpen: boolean;
   setPaletteOpen: (b: boolean) => void;
+
+  /* arena (multi-model compare) */
+  arenaOpen: boolean;
+  setArenaOpen: (b: boolean) => void;
+  arenaModels: ArenaModel[];
+  setArenaModel: (index: number, m: ArenaModel) => void;
+  addArenaColumn: () => void;
+  removeArenaColumn: (index: number) => void;
+  arenaCols: ArenaCol[];
+  arenaRunning: boolean;
+  runArena: (prompt: string) => void;
+  stopArena: () => void;
+  pickWinner: (index: number) => void;
+  arenaWinner: number | null;
 }
 
 /** Pure path-walk used both inside the store and by selectors. */
@@ -255,7 +282,7 @@ export const useStore = create<AppState>()(
         set({ allowTools: b });
       },
 
-      async send(text) {
+      async send(text, attachments) {
         const st = get();
         if (!st.settings) return;
         const convId = st.activeId ?? get().newConversation();
@@ -268,6 +295,7 @@ export const useStore = create<AppState>()(
           id: nanoid(),
           role: "user",
           content: text,
+          attachments,
           parentId,
           createdAt: Date.now(),
         };
@@ -376,6 +404,81 @@ export const useStore = create<AppState>()(
       paletteOpen: false,
       setPaletteOpen(b) {
         set({ paletteOpen: b });
+      },
+
+      arenaOpen: false,
+      setArenaOpen(b) {
+        set({ arenaOpen: b });
+      },
+      arenaModels: [],
+      setArenaModel(index, m) {
+        set((st) => ({ arenaModels: st.arenaModels.map((x, i) => (i === index ? m : x)) }));
+      },
+      addArenaColumn() {
+        set((st) => ({ arenaModels: [...st.arenaModels, { providerId: st.settings?.activeProviderId ?? "ollama", model: st.settings?.activeModel ?? "llama3.2" }] }));
+      },
+      removeArenaColumn(index) {
+        set((st) => ({ arenaModels: st.arenaModels.filter((_, i) => i !== index) }));
+      },
+      arenaCols: [],
+      arenaRunning: false,
+      arenaWinner: null,
+      pickWinner(index) {
+        set((st) => ({ arenaWinner: st.arenaWinner === index ? null : index }));
+      },
+      runArena(prompt) {
+        const st = get();
+        const settings = st.settings;
+        if (!settings || !prompt.trim() || st.arenaModels.length === 0) return;
+        const models = st.arenaModels;
+        // stop any previous run
+        st.arenaCols.forEach((c) => c.controller?.abort());
+        const cols: ArenaCol[] = models.map((m) => ({
+          providerId: m.providerId,
+          model: m.model,
+          content: "",
+          reasoning: "",
+          status: "streaming" as const,
+          controller: undefined,
+        }));
+        set({ arenaCols: cols, arenaRunning: true, arenaWinner: null });
+        const msgs = [{ id: "1", role: "user" as const, content: prompt, createdAt: Date.now() }];
+        let pending = cols.length;
+        cols.forEach((col, i) => {
+          const controller = streamChat(
+            { messages: msgs, providerId: col.providerId, model: col.model, reasoningEffort: st.reasoningEffort, allowTools: false },
+            (ev) => {
+              set((s) => {
+                const next = [...s.arenaCols];
+                const c = { ...next[i] };
+                if (ev.type === "delta") c.content += ev.content;
+                else if (ev.type === "reasoning") c.reasoning += ev.content;
+                else if (ev.type === "error") { c.content += `\n\n> ⚠️ ${ev.message}`; c.status = "error"; }
+                next[i] = c;
+                return { arenaCols: next };
+              });
+            },
+            () => {},
+            () => {
+              set((s) => {
+                const next = [...s.arenaCols];
+                if (next[i]) next[i] = { ...next[i], status: next[i].status === "error" ? "error" : "done", controller: undefined };
+                return { arenaCols: next };
+              });
+              pending--;
+              if (pending <= 0) set({ arenaRunning: false });
+            },
+          );
+          set((s) => {
+            const next = [...s.arenaCols];
+            next[i] = { ...next[i], controller };
+            return { arenaCols: next };
+          });
+        });
+      },
+      stopArena() {
+        get().arenaCols.forEach((c) => c.controller?.abort());
+        set((s) => ({ arenaCols: s.arenaCols.map((c) => ({ ...c, status: c.status === "streaming" ? "stopped" : c.status })), arenaRunning: false }));
       },
     }),
     {

@@ -84,6 +84,13 @@ export function Message({ msg, streaming }: { msg: ChatMessage; streaming?: bool
           </div>
           {msg.reasoning && <ReasoningBlock text={msg.reasoning} />}
           <ToolBlocks msg={msg} />
+          {isUser && msg.attachments?.some((a) => a.type.startsWith("image/")) && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {msg.attachments!.filter((a) => a.type.startsWith("image/")).map((a) => (
+                <img key={a.id} src={a.url} alt={a.name} className="max-h-48 rounded-md border border-[var(--color-border)]" />
+              ))}
+            </div>
+          )}
           {msg.content || !streaming ? (
             isUser ? (
               <div className="whitespace-pre-wrap">{msg.content}</div>
