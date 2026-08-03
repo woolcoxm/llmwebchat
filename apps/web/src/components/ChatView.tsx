@@ -37,6 +37,13 @@ export function ChatView() {
           {activeProvider?.name} · {settings?.activeModel}
         </div>
         <button
+          onClick={() => useStore.getState().setTreeOpen(true)}
+          className="px-2 py-1 rounded-md text-xs border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"
+          title="Conversation tree"
+        >
+          🌳
+        </button>
+        <button
           onClick={() => setArtifactOpen(!artifactOpen)}
           className={`ml-auto px-2 py-1 rounded-md text-xs border ${artifactOpen ? "border-[var(--color-accent)]/50 text-[var(--color-accent-fg)] bg-[var(--color-accent)]/10" : "border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"}`}
           title="Toggle Artifacts panel (⌘J)"

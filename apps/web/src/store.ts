@@ -103,6 +103,12 @@ interface AppState {
   pendingInsert: string | null;
   setPendingInsert: (s: string | null) => void;
 
+  /* tree view */
+  treeOpen: boolean;
+  setTreeOpen: (b: boolean) => void;
+  /** Make `msgId` the active tip by repointing activeChild along its path from root. */
+  activatePathTo: (convId: string, msgId: string) => void;
+
   /* arena (multi-model compare) */
   arenaOpen: boolean;
   setArenaOpen: (b: boolean) => void;
@@ -434,6 +440,31 @@ export const useStore = create<AppState>()(
       pendingInsert: null,
       setPendingInsert(s) {
         set({ pendingInsert: s });
+      },
+      treeOpen: false,
+      setTreeOpen(b) {
+        set({ treeOpen: b });
+      },
+      activatePathTo(convId, msgId) {
+        const msgs = get().messagesByConv[convId] ?? [];
+        const byId = new Map(msgs.map((m) => [m.id, m]));
+        // walk from msgId up to root
+        const chain: string[] = [];
+        let cur: string | undefined = msgId;
+        const guard = new Set<string>();
+        while (cur && byId.has(cur) && !guard.has(cur)) {
+          guard.add(cur);
+          chain.unshift(cur);
+          cur = byId.get(cur)!.parentId ?? undefined;
+        }
+        // repoint activeChild for each parent -> child on the chain
+        set((st) => {
+          const ac = { ...(st.activeChild[convId] ?? {}) };
+          for (let i = 0; i < chain.length - 1; i++) {
+            ac[chain[i]!] = chain[i + 1]!;
+          }
+          return { activeChild: { ...st.activeChild, [convId]: ac } };
+        });
       },
 
       arenaOpen: false,
