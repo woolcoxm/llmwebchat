@@ -61,6 +61,8 @@ interface AppState {
   renameConversation: (id: string, title: string) => void;
   togglePin: (id: string) => void;
   toggleTag: (id: string, tag: string) => void;
+  /** Remove all messages from a conversation but keep the conversation shell. */
+  clearConversation: (id: string) => void;
   setConvSettings: (id: string, patch: { systemPrompt?: string; model?: string; temperature?: number }) => void;
   /** Duplicate the active branch of a conversation into a new conversation. */
   forkConversation: (convId: string) => string | null;
@@ -298,6 +300,17 @@ export const useStore = create<AppState>()(
             return { ...c, tags: has ? (c.tags ?? []).filter((t) => t !== tag) : [...(c.tags ?? []), tag] };
           }),
         }));
+      },
+      clearConversation(id) {
+        set((st) => {
+          const { [id]: _m, ...restMsgs } = st.messagesByConv;
+          const { [id]: _c, ...restChild } = st.activeChild;
+          return {
+            messagesByConv: { ...restMsgs, [id]: [] },
+            activeChild: { ...restChild, [id]: {} },
+            conversations: st.conversations.map((c) => (c.id === id ? { ...c, title: "New chat", updatedAt: Date.now() } : c)),
+          };
+        });
       },
       setConvSettings(id, patch) {
         set((st) => ({

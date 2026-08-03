@@ -30,6 +30,7 @@ export function CommandPalette() {
             { id: "fork", label: "Fork conversation (active branch → new chat)", run: () => { st.forkConversation(activeId); close(); } },
             { id: "autotitle", label: "✨ Auto-title this conversation", run: () => { void st.autoTitle(activeId); close(); } },
             { id: "compact", label: "📝 Compact & continue (summarize → new chat)", run: () => { void st.compactAndContinue(activeId); close(); } },
+            { id: "clear", label: "🗑 Clear conversation (keep the chat)", run: () => { if (confirm("Clear all messages in this conversation?")) { st.clearConversation(activeId); } close(); } },
           ]
         : []),
       { id: "sidebar", label: st.sidebarOpen ? "Hide sidebar" : "Show sidebar", keys: "⌘B", run: () => { st.toggleSidebar(); close(); } },
