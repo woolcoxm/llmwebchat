@@ -1,14 +1,26 @@
+import { useState } from "react";
 import { useStore } from "../store.js";
 
 export function Sidebar() {
   const open = useStore((s) => s.sidebarOpen);
   const conversations = useStore((s) => s.conversations);
+  const messagesByConv = useStore((s) => s.messagesByConv);
   const activeId = useStore((s) => s.activeId);
   const select = useStore((s) => s.selectConversation);
   const del = useStore((s) => s.deleteConversation);
   const newConv = useStore((s) => s.newConversation);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const settings = useStore((s) => s.settings);
+  const [query, setQuery] = useState("");
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? conversations.filter((c) => {
+        if (c.title.toLowerCase().includes(q)) return true;
+        const msgs = messagesByConv[c.id] ?? [];
+        return msgs.some((m) => (m.content ?? "").toLowerCase().includes(q));
+      })
+    : conversations;
 
   if (!open) return null;
 
@@ -28,15 +40,21 @@ export function Sidebar() {
         >
           <span className="text-[var(--color-accent-fg)]">+</span> New chat
         </button>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search conversations…"
+          className="w-full mb-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[var(--color-accent)]"
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
-        {conversations.length === 0 && (
+        {filtered.length === 0 && (
           <div className="px-3 py-8 text-center text-xs text-[var(--color-muted)]">
-            No conversations yet
+            {q ? "No matches" : "No conversations yet"}
           </div>
         )}
-        {conversations.map((c) => (
+        {filtered.map((c) => (
           <div
             key={c.id}
             onClick={() => select(c.id)}
