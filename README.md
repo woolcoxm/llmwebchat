@@ -9,15 +9,16 @@
 ## ✨ What's here now
 - **Provider-agnostic** — Ollama, LM Studio, OpenRouter, or any custom OpenAI-compatible URL, all behind one client
 - **Reasoning stream** — model reasoning/thinking output rendered in a collapsible panel, with per-message effort control for reasoning-capable providers
-- **Conversation branching/forking** — tree model; regenerate, edit-and-resubmit, and branch navigation (1/n prev/next)
-- **Artifacts panel** — live preview for HTML/SVG/Mermaid + in-browser **Python (Pyodide)** execution; auto-opens for previewable blocks
+- **Conversation branching/forking** — tree model; regenerate, edit-and-resubmit, continue (prefill), branch navigation; **fork to new chat**, **branch diff/compare**, conversation **tree graph** view
+- **Per-conversation settings** — system prompt, model, temperature overrides per chat
+- **Artifacts panel** — live preview for HTML/SVG/Mermaid/**charts (Recharts)** + in-browser **Python (Pyodide)** execution; auto-opens for previewable blocks
+- **Multimodal** — attach images for vision + **text documents** (txt/md/code/json/csv → context)
 - **Multi-model Arena** — stream one prompt across 2–4 models side-by-side, pick a 🏆 winner
-- **Agentic tools** — `web_search`, `web_reader` (SSRF-guarded), `read_file`, `write_file`, `run_bash` (sandboxed); multi-round tool loop
-- **MCP client** — connect any stdio Model Context Protocol server; its tools become callable by the model
+- **Agentic tools** — `web_search`, `web_reader` (SSRF-guarded), `read_file`, `write_file`, `run_bash` (sandboxed); multi-round loop; **human-in-the-loop approvals** for destructive tools
+- **MCP client** — connect any stdio Model Context Protocol server; its tools become callable
 - **Knowledge base (RAG)** — ingest docs (chunked + embedded), retrieve via `knowledge_search`
-- **Multimodal** — attach images for vision-capable models
-- **Voice** — STT dictation into the composer + TTS speak for replies (Web Speech API)
-- **Command palette (⌘K)** + global shortcuts, conversation **search**, Markdown export, accent-color **theming**
+- **Voice** — STT dictation + TTS speak (Web Speech API, zero deps)
+- ⌨ **Power UX** — command palette (⌘K), global shortcuts (`?` for help), conversation search/pin/auto-title, prompt snippets, Markdown + **JSON backup** export/import, token + context display, accent-color theming
 - **Secrets stay in the proxy** — API keys never reach the browser; masked in the UI
 - **Graceful offline** — local runners (Ollama) with live `/models` discovery and preset fallback
 
@@ -25,10 +26,10 @@
 | Phase | Theme | Status |
 |---|---|---|
 | ✅ 0 | Foundation — streaming chat, settings, providers | done |
-| ✅ 1 | Power UX — branching, command palette, shortcuts, search | done |
-| ✅ 2 | Artifacts & rendering — live panels, Pyodide | core done |
-| ✅ 3 | Agentic — tools, MCP, RAG | core done |
-| 🌟 4 | Differentiators — arena, voice, theming | mostly done |
+| ✅ 1 | Power UX — branching, palette, shortcuts, search, fork, tree, compare | done |
+| ✅ 2 | Artifacts & rendering — live panels, Pyodide, charts | done |
+| ✅ 3 | Agentic — tools, MCP, RAG, HITL approvals | done |
+| 🌟 4 | Differentiators — arena, voice, theming, per-conv settings | mostly done |
 | 👥 5 | Multi-user (optional) | later |
 
 See [PLAN.md](./PLAN.md) for the detailed checklist.
