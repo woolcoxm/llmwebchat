@@ -10,6 +10,8 @@ export function ChatView() {
   const settings = useStore((s) => s.settings);
   const newConversation = useStore((s) => s.newConversation);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
+  const artifactOpen = useStore((s) => s.artifactOpen);
+  const setArtifactOpen = useStore((s) => s.setArtifactOpen);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,6 +33,13 @@ export function ChatView() {
         <div className="text-sm text-[var(--color-muted)] truncate">
           {activeProvider?.name} · {settings?.activeModel}
         </div>
+        <button
+          onClick={() => setArtifactOpen(!artifactOpen)}
+          className={`ml-auto px-2 py-1 rounded-md text-xs border ${artifactOpen ? "border-[var(--color-accent)]/50 text-[var(--color-accent-fg)] bg-[var(--color-accent)]/10" : "border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"}`}
+          title="Toggle Artifacts panel"
+        >
+          ◧ Artifacts
+        </button>
       </header>
 
       <div className="flex-1 overflow-y-auto">

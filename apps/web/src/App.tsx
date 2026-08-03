@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Sidebar } from "./components/Sidebar.js";
 import { ChatView } from "./components/ChatView.js";
 import { SettingsModal } from "./components/SettingsModal.js";
+import { ArtifactPanel } from "./components/ArtifactPanel.js";
 import { useStore } from "./store.js";
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
     <div className="flex h-full w-full">
       <Sidebar />
       <ChatView />
+      <ArtifactPanel />
       <SettingsModal />
     </div>
   );

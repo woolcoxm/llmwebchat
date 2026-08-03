@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 import rehypeHighlight from "rehype-highlight";
+import { useStore } from "../store.js";
 
 function CodeBlock({ className, children }: { className?: string; children?: React.ReactNode }) {
   const [copied, setCopied] = useState(false);
@@ -18,16 +19,25 @@ function CodeBlock({ className, children }: { className?: string; children?: Rea
     }
   };
   return (
-    <div className="relative group">
-      <div className="flex items-center justify-between px-3 py-1 text-[11px] text-[var(--color-muted)] border-b border-[var(--color-border)] bg-[var(--color-surface-2)] rounded-t-[10px]">
-        <span>{lang ?? "text"}</span>
-        <button
-          onClick={copy}
-          className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-[var(--color-fg)]"
-        >
-          {copied ? "✓ copied" : "copy"}
-        </button>
-      </div>
+<div className="relative group">
+        <div className="flex items-center justify-between px-3 py-1 text-[11px] text-[var(--color-muted)] border-b border-[var(--color-border)] bg-[var(--color-surface-2)] rounded-t-[10px]">
+          <span>{lang ?? "text"}</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => useStore.getState().setArtifactOpen(true)}
+              className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-[var(--color-fg)]"
+              title="Open in Artifacts panel"
+            >
+              ↗ open
+            </button>
+            <button
+              onClick={copy}
+              className="opacity-0 group-hover:opacity-100 transition-opacity hover:text-[var(--color-fg)]"
+            >
+              {copied ? "✓ copied" : "copy"}
+            </button>
+          </div>
+        </div>
       <pre className="!mt-0 !rounded-t-none">
         <code className={className}>{children}</code>
       </pre>

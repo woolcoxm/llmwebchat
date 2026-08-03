@@ -54,6 +54,8 @@ interface AppState {
   setSettingsOpen: (b: boolean) => void;
   sidebarOpen: boolean;
   toggleSidebar: () => void;
+  artifactOpen: boolean;
+  setArtifactOpen: (b: boolean) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -239,6 +241,10 @@ export const useStore = create<AppState>()(
       sidebarOpen: true,
       toggleSidebar() {
         set((s) => ({ sidebarOpen: !s.sidebarOpen }));
+      },
+      artifactOpen: false,
+      setArtifactOpen(b) {
+        set({ artifactOpen: b });
       },
     }),
     {
