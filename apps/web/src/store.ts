@@ -70,6 +70,8 @@ interface AppState {
   toggleSidebar: () => void;
   artifactOpen: boolean;
   setArtifactOpen: (b: boolean) => void;
+  paletteOpen: boolean;
+  setPaletteOpen: (b: boolean) => void;
 }
 
 /** Pure path-walk used both inside the store and by selectors. */
@@ -351,6 +353,10 @@ export const useStore = create<AppState>()(
       artifactOpen: false,
       setArtifactOpen(b) {
         set({ artifactOpen: b });
+      },
+      paletteOpen: false,
+      setPaletteOpen(b) {
+        set({ paletteOpen: b });
       },
     }),
     {

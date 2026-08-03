@@ -38,9 +38,16 @@ export function ChatView() {
         <button
           onClick={() => setArtifactOpen(!artifactOpen)}
           className={`ml-auto px-2 py-1 rounded-md text-xs border ${artifactOpen ? "border-[var(--color-accent)]/50 text-[var(--color-accent-fg)] bg-[var(--color-accent)]/10" : "border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"}`}
-          title="Toggle Artifacts panel"
+          title="Toggle Artifacts panel (⌘J)"
         >
           ◧ Artifacts
+        </button>
+        <button
+          onClick={() => useStore.getState().setPaletteOpen(true)}
+          className="px-2 py-1 rounded-md text-xs border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"
+          title="Command palette (⌘K)"
+        >
+          ⌘K
         </button>
       </header>
 

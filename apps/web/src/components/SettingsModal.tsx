@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ProviderConfig, Settings } from "@llmwebchat/shared";
+import type { ProviderConfig, Settings, ToolsConfig } from "@llmwebchat/shared";
 import { useStore } from "../store.js";
 
 const MASKED = "••••••••";
@@ -98,6 +98,9 @@ export function SettingsModal() {
     setDraft({ ...draft, providers: draft.providers.filter((p) => p.id !== id) });
   };
 
+  const patchTools = (patch: Partial<ToolsConfig>) =>
+    setDraft({ ...draft, tools: { ...draft.tools, workspaceRoot: draft.tools?.workspaceRoot, ...patch } });
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm grid place-items-center p-4"
@@ -177,6 +180,29 @@ export function SettingsModal() {
               freely. Keys are stored in the proxy only — never in the browser.
             </p>
           </section>
+
+          <section>
+            <h3 className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">
+              Tools (server-side)
+            </h3>
+            <input
+              value={draft.tools?.workspaceRoot ?? ""}
+              onChange={(e) => setDraft({ ...draft, tools: { ...draft.tools, workspaceRoot: e.target.value } })}
+              placeholder="Workspace root (absolute path, e.g. /home/me/project)"
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)] mb-2"
+            />
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <Toggle label="🌐 web_search / web_reader" checked={draft.tools?.allowWeb !== false} onChange={(v) => patchTools({ allowWeb: v })} />
+              <Toggle label="📁 read_file" checked={!!draft.tools?.workspaceRoot && draft.tools?.allowFiles !== false} onChange={(v) => patchTools({ allowFiles: v })} disabled={!draft.tools?.workspaceRoot} />
+              <Toggle label="✏️ write_file" checked={draft.tools?.allowWriteFiles === true} onChange={(v) => patchTools({ allowWriteFiles: v })} disabled={!draft.tools?.workspaceRoot} />
+              <Toggle label="⚙️ run_bash" checked={draft.tools?.allowBash === true} onChange={(v) => patchTools({ allowBash: v })} disabled={!draft.tools?.workspaceRoot} />
+            </div>
+            <p className="text-[11px] text-[var(--color-muted)] mt-3">
+              File & bash tools are sandboxed to the workspace root (path traversal blocked).
+              <strong> run_bash</strong> and <strong>write_file</strong> are off by default — enable
+              only in folders you trust. Web tools block SSRF (private/localhost/metadata IPs).
+            </p>
+          </section>
         </div>
 
         <div className="sticky bottom-0 flex justify-end gap-2 px-5 py-4 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
@@ -198,5 +224,34 @@ export function SettingsModal() {
         </div>
       </div>
     </div>
+  );
+}
+
+function Toggle({
+  label,
+  checked,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <label
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm cursor-pointer ${
+        disabled ? "opacity-40 cursor-not-allowed border-[var(--color-border)]" : checked ? "border-[var(--color-accent)]/50 bg-[var(--color-accent)]/10" : "border-[var(--color-border)] hover:border-[var(--color-accent)]/30"
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={checked}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+        className="accent-[var(--color-accent)]"
+      />
+      <span className="text-[var(--color-fg)]">{label}</span>
+    </label>
   );
 }
