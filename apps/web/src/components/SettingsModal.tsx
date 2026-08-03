@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { AgentConfig, CustomTool, McpServerConfig, ProviderConfig, Settings, ToolsConfig } from "@llmwebchat/shared";
-import { deleteKbItem, ingestKb, listKb } from "../lib/api.js";
+import { deleteKbItem, ingestKb, listKb, useLocalAgentForAgent } from "../lib/api.js";
 import { useStore } from "../store.js";
 
 const MASKED = "••••••••";
@@ -338,6 +338,18 @@ export function SettingsModal() {
           <AgentSection
             agent={draft.agent ?? {}}
             onChange={(a) => setDraft({ ...draft, agent: { ...draft.agent, ...a } })}
+            activeProviderId={settings?.activeProviderId}
+            activeModel={settings?.activeModel}
+            onUseLocal={async () => {
+              if (!settings?.activeProviderId) return;
+              const r = await useLocalAgentForAgent(settings.activeProviderId, settings.activeModel);
+              if (r.ok) {
+                setDraft({ ...draft, agent: { ...draft.agent, enabled: true, provider: r.provider, model: r.model } });
+                await useStore.getState().loadSettings();
+              } else {
+                alert(r.error || "Could not configure local agent.");
+              }
+            }}
           />
 
           <section>
@@ -449,10 +461,25 @@ function McpRow({
   );
 }
 
-function AgentSection({ agent, onChange }: { agent: AgentConfig; onChange: (a: Partial<AgentConfig>) => void }) {
+function AgentSection({ agent, onChange, activeProviderId, activeModel, onUseLocal }: {
+  agent: AgentConfig;
+  onChange: (a: Partial<AgentConfig>) => void;
+  activeProviderId?: string;
+  activeModel?: string;
+  onUseLocal: () => Promise<void>;
+}) {
   return (
     <section>
       <h3 className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">Agent (pi)</h3>
+      {activeProviderId && (
+        <button
+          onClick={onUseLocal}
+          className="w-full mb-3 btn-primary rounded-xl px-3 py-2.5 text-sm font-medium flex items-center justify-center gap-2"
+          title="Register your current model with pi and run the agent on it"
+        >
+          ⚡ Use my current model ({activeModel ?? "?"}) for the agent
+        </button>
+      )}
       <label className="flex items-center gap-2 mb-2 text-sm text-[var(--color-fg)]">
         <input
           type="checkbox"

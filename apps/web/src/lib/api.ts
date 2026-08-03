@@ -52,6 +52,17 @@ export async function postApproval(id: string, decision: "approve" | "reject") {
   });
 }
 
+/** Register the given chat provider as a pi provider (writes ~/.pi/agent/models.json)
+ *  and enable the agent on it — one-click local LLM agent. */
+export async function useLocalAgentForAgent(providerId: string, modelId?: string) {
+  const r = await fetch("/api/agent/local", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ providerId, modelId }),
+  });
+  return r.json();
+}
+
 /** Stream a prompt through the pi agent backend (same ChatEvent wire format). */
 export function streamAgent(
   req: { sessionId: string; message: string; images?: Array<{ data: string; mimeType: string }> },

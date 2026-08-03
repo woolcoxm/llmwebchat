@@ -14,6 +14,7 @@ import { Hono } from "hono";
 import type { ChatEvent } from "@llmwebchat/shared";
 import { loadSettings } from "../store.js";
 import { abortSession, ensureSession } from "../pi/manager.js";
+import { upsertPiProvider } from "../pi/modelsjson.js";
 
 export const agentRouter = new Hono();
 
@@ -82,3 +83,25 @@ agentRouter.post("/abort", async (c) => {
 });
 
 agentRouter.get("/sessions", (c) => c.json({ sessions: [] })); // placeholder; status via manager could be exposed
+
+/** POST /api/agent/local — register a configured chat provider as a pi provider
+ * (writes ~/.pi/agent/models.json) and enable the agent on it. One-click local LLM. */
+agentRouter.post("/local", async (c) => {
+  const { providerId, modelId } = (await c.req.json().catch(() => ({}))) as { providerId?: string; modelId?: string };
+  const settings = loadSettings();
+  const p = settings.providers.find((x) => x.id === providerId);
+  if (!p) return c.json({ error: "Unknown provider" }, 400);
+  const model = modelId ?? p.models?.[0]?.id ?? "local";
+  upsertPiProvider("pistudio-local", {
+    baseUrl: p.baseURL.replace(/\/$/, ""),
+    api: "openai-completions",
+    apiKey: p.apiKey || "local",
+    compat: { supportsDeveloperRole: false, supportsReasoningEffort: false },
+    models: [{ id: model, name: `${p.name} · ${model}` }],
+  });
+  const next = { ...settings, agent: { ...settings.agent, enabled: true, provider: "pistudio-local", model } };
+  // persist (reuse the store's apply path by saving directly)
+  const { applyClientSettings } = await import("../store.js");
+  applyClientSettings(settings, next);
+  return c.json({ ok: true, provider: "pistudio-local", model });
+});
