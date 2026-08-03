@@ -23,6 +23,7 @@ import { toolsRouter } from "./routes/tools.js";
 import { mcpRouter } from "./routes/mcp.js";
 import { kbRouter } from "./routes/kb.js";
 import { approveRouter } from "./routes/approve.js";
+import { agentRouter } from "./routes/agent.js";
 import {
   authGate,
   bodySizeLimit,
@@ -51,6 +52,7 @@ app.route("/api/tools", toolsRouter);
 app.route("/api/mcp", mcpRouter);
 app.route("/api/kb", kbRouter);
 app.route("/api/approve", approveRouter);
+app.route("/api/agent", agentRouter);
 app.route("/api/models", models);
 // Rate-limit the (expensive, tool-capable) chat endpoint.
 app.use("/api/chat/*", rateLimit({ windowMs: 60_000, max: 120 }));

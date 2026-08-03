@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { CustomTool, McpServerConfig, ProviderConfig, Settings, ToolsConfig } from "@llmwebchat/shared";
+import type { AgentConfig, CustomTool, McpServerConfig, ProviderConfig, Settings, ToolsConfig } from "@llmwebchat/shared";
 import { deleteKbItem, ingestKb, listKb } from "../lib/api.js";
 import { useStore } from "../store.js";
 
@@ -335,6 +335,11 @@ export function SettingsModal() {
 
           <KnowledgeBaseSection embeddingModel={draft.tools?.embeddingModel ?? "nomic-embed-text"} onModel={(m) => patchTools({ embeddingModel: m })} />
 
+          <AgentSection
+            agent={draft.agent ?? {}}
+            onChange={(a) => setDraft({ ...draft, agent: { ...draft.agent, ...a } })}
+          />
+
           <section>
             <h3 className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">Backup</h3>
             <div className="flex gap-2">
@@ -441,6 +446,38 @@ function McpRow({
         className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]"
       />
     </div>
+  );
+}
+
+function AgentSection({ agent, onChange }: { agent: AgentConfig; onChange: (a: Partial<AgentConfig>) => void }) {
+  return (
+    <section>
+      <h3 className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">Agent (pi)</h3>
+      <label className="flex items-center gap-2 mb-2 text-sm text-[var(--color-fg)]">
+        <input
+          type="checkbox"
+          checked={agent.enabled === true}
+          onChange={(e) => onChange({ enabled: e.target.checked })}
+          className="accent-[var(--color-accent)]"
+        />
+        Enable agent mode — route prompts through a real <strong>pi</strong> agent (tools, skills, plans)
+      </label>
+      <input
+        value={agent.cwd ?? ""}
+        onChange={(e) => onChange({ cwd: e.target.value })}
+        placeholder="Working directory (absolute path the agent operates in), e.g. C:\\Users\\Mark\\project"
+        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)] mb-2"
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <input value={agent.bin ?? ""} onChange={(e) => onChange({ bin: e.target.value })} placeholder="pi binary (default: pi)" className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]" />
+        <input value={agent.provider ?? ""} onChange={(e) => onChange({ provider: e.target.value })} placeholder="provider override (optional)" className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]" />
+      </div>
+      <input value={agent.model ?? ""} onChange={(e) => onChange({ model: e.target.value })} placeholder="model override (optional, e.g. glm-5.2:high)" className="w-full mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]" />
+      <p className="text-[11px] text-[var(--color-muted)] mt-2">
+        When agent mode is on, the composer routes through pi (<code>pi --mode rpc</code>). pi uses its own auth/config
+        (your <code>/login</code> or env keys). The agent runs real tools in the working directory — point it at a folder you trust.
+      </p>
+    </section>
   );
 }
 

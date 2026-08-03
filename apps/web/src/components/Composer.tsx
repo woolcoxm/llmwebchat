@@ -28,6 +28,9 @@ export function Composer() {
   const setReasoningEffort = useStore((s) => s.setReasoningEffort);
   const allowTools = useStore((s) => s.allowTools);
   const setAllowTools = useStore((s) => s.setAllowTools);
+  const agentMode = useStore((s) => s.agentMode);
+  const setAgentMode = useStore((s) => s.setAgentMode);
+  const agentEnabled = !!useStore((s) => s.settings?.agent?.enabled);
   const ctxTokens = useStore((s) => {
     const id = s.activeId;
     if (!id) return undefined;
@@ -137,6 +140,19 @@ export function Composer() {
           >
             🔧 tools {allowTools ? "on" : "off"}
           </button>
+          {agentEnabled && (
+            <button
+              onClick={() => setAgentMode(!agentMode)}
+              className={`px-2 py-1 rounded-md border transition-colors ${
+                agentMode
+                  ? "bg-[var(--color-accent)]/15 border-[var(--color-accent)]/50 text-[var(--color-accent-fg)]"
+                  : "bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-muted)]"
+              }`}
+              title="Route through the pi agent (real tools, plans, skills)"
+            >
+              🤖 agent {agentMode ? "on" : "off"}
+            </button>
+          )}
         </div>
 
         <div className="relative rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus-within:border-[var(--color-accent)]/60 transition-colors">

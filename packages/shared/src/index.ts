@@ -215,6 +215,20 @@ export interface Settings {
   theme?: "system" | "light" | "dark";
   /** Server-side tool configuration. */
   tools?: ToolsConfig;
+  /** pi agent backend configuration (run prompts through a real pi agent). */
+  agent?: AgentConfig;
+}
+
+export interface AgentConfig {
+  /** Master switch for agent mode. */
+  enabled?: boolean;
+  /** pi binary path (default "pi"). */
+  bin?: string;
+  /** Directory the agent runs in (its tools operate here). Required when enabled. */
+  cwd?: string;
+  /** Optional provider/model override passed to pi. */
+  provider?: string;
+  model?: string;
 }
 
 /* ------------------------------------------------------------------ */

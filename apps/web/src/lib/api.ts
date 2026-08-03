@@ -52,6 +52,62 @@ export async function postApproval(id: string, decision: "approve" | "reject") {
   });
 }
 
+/** Stream a prompt through the pi agent backend (same ChatEvent wire format). */
+export function streamAgent(
+  req: { sessionId: string; message: string; images?: Array<{ data: string; mimeType: string }> },
+  onEvent: (ev: ChatEvent) => void,
+  onError: (err: Error) => void,
+  onDone: () => void,
+): AbortController {
+  const controller = new AbortController();
+  (async () => {
+    try {
+      const res = await fetch("/api/agent/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(req),
+        signal: controller.signal,
+      });
+      if (!res.ok || !res.body) {
+        const text = await res.text().catch(() => "");
+        try {
+          const ev = JSON.parse(text) as ChatEvent;
+          if (ev?.type === "error") onEvent(ev);
+          else onError(new Error(`Agent HTTP ${res.status}`));
+        } catch {
+          onError(new Error(`Agent HTTP ${res.status}: ${text.slice(0, 200)}`));
+        }
+        onDone();
+        return;
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        let nl: number;
+        while ((nl = buffer.indexOf("\n")) !== -1) {
+          const line = buffer.slice(0, nl).trim();
+          buffer = buffer.slice(nl + 1);
+          if (!line) continue;
+          try {
+            onEvent(JSON.parse(line) as ChatEvent);
+          } catch {
+            /* skip malformed */
+          }
+        }
+      }
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") onError(err as Error);
+    } finally {
+      onDone();
+    }
+  })();
+  return controller;
+}
+
 /**
  * Stream a chat completion. Calls onEvent for each NDJSON ChatEvent.
  * Returns an AbortController so the UI can cancel.

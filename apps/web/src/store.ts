@@ -15,7 +15,7 @@ import type {
   ReasoningEffort,
   Settings,
 } from "@llmwebchat/shared";
-import { getSettings, saveSettings, streamChat } from "./lib/api.js";
+import { getSettings, saveSettings, streamChat, streamAgent } from "./lib/api.js";
 
 interface StreamState {
   conversationId: string;
@@ -93,6 +93,9 @@ interface AppState {
   setReasoningEffort: (e: ReasoningEffort) => void;
   allowTools: boolean;
   setAllowTools: (b: boolean) => void;
+  /** pi agent backend mode (route prompts through a real pi agent). */
+  agentMode: boolean;
+  setAgentMode: (b: boolean) => void;
 
   /* actions that produce new branches */
   send: (text: string, attachments?: ChatMessage["attachments"]) => Promise<void>;
@@ -237,6 +240,41 @@ function runStream(
       get().patchMessage(convId, assistantId, {
         content: (cur()?.content ?? "") + `\n\n> ⚠️ ${err.message}`,
       });
+    },
+    () => set(() => ({ stream: null })),
+  );
+  set(() => ({ stream: { conversationId: convId, assistantMessageId: assistantId, controller } }));
+}
+
+/** Like runStream, but routes through the pi agent backend (one message per turn). */
+function runAgentStream(
+  convId: string,
+  message: string,
+  attachments: ChatMessage["attachments"] | undefined,
+  assistantId: string,
+  set: (fn: (s: AppState) => Partial<AppState>) => void,
+  get: () => AppState,
+) {
+  const images = (attachments ?? [])
+    .filter((a) => a.url && a.type.startsWith("image/"))
+    .map((a) => {
+      const m = /^data:([^;]+);base64,(.*)$/s.exec(a.url ?? "");
+      return m ? { mimeType: m[1], data: m[2] } : null;
+    })
+    .filter((x): x is { mimeType: string; data: string } => !!x);
+  const controller = streamAgent(
+    { sessionId: convId, message, images },
+    (ev) => {
+      const cur = () => get().messagesByConv[convId]?.find((m) => m.id === assistantId);
+      if (ev.type === "delta") get().patchMessage(convId, assistantId, { content: (cur()?.content ?? "") + ev.content });
+      else if (ev.type === "reasoning") get().patchMessage(convId, assistantId, { reasoning: (cur()?.reasoning ?? "") + ev.content });
+      else if (ev.type === "tool_call") get().patchMessage(convId, assistantId, { toolCalls: [...(cur()?.toolCalls ?? []), ev.toolCall] });
+      else if (ev.type === "tool_result") get().patchMessage(convId, assistantId, { toolResults: [...(cur()?.toolResults ?? []), ev.result] });
+      else if (ev.type === "error") get().patchMessage(convId, assistantId, { content: (cur()?.content ?? "") + `\n\n> ⚠️ ${ev.message}` });
+    },
+    (err) => {
+      const cur = () => get().messagesByConv[convId]?.find((m) => m.id === assistantId);
+      get().patchMessage(convId, assistantId, { content: (cur()?.content ?? "") + `\n\n> ⚠️ ${err.message}` });
     },
     () => set(() => ({ stream: null })),
   );
@@ -517,6 +555,10 @@ export const useStore = create<AppState>()(
       setAllowTools(b) {
         set({ allowTools: b });
       },
+      agentMode: false,
+      setAgentMode(b) {
+        set({ agentMode: b });
+      },
 
       async send(text, attachments) {
         const st = get();
@@ -566,7 +608,13 @@ export const useStore = create<AppState>()(
         });
         get().setActiveChild(convId, userMsg.id, assistantId);
 
-        runStream(convId, [...path, wireUserMsg], userMsg, assistantId, set, get);
+        // Branch: agent backend (pi) vs direct chat. Agent mode keeps its own
+        // session context per conversation, so we send just the new message.
+        if (st.agentMode && st.settings?.agent?.enabled) {
+          runAgentStream(convId, wireUserMsg.content, attachments, assistantId, set, get);
+        } else {
+          runStream(convId, [...path, wireUserMsg], userMsg, assistantId, set, get);
+        }
       },
 
       async regenerate(assistantMessageId) {
@@ -830,6 +878,7 @@ export const useStore = create<AppState>()(
         activeChild: s.activeChild,
         reasoningEffort: s.reasoningEffort,
         allowTools: s.allowTools,
+        agentMode: s.agentMode,
         sidebarOpen: s.sidebarOpen,
         promptTemplates: s.promptTemplates,
       }),
