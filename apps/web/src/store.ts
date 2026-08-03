@@ -80,6 +80,7 @@ interface AppState {
   send: (text: string, attachments?: ChatMessage["attachments"]) => Promise<void>;
   regenerate: (assistantMessageId: string) => Promise<void>;
   editResubmit: (userMessageId: string, newText: string) => Promise<void>;
+  continueFrom: (assistantMessageId: string) => Promise<void>;
 
   /* streaming */
   stream: StreamState | null;
@@ -192,6 +193,8 @@ function runStream(
             { toolCallId: ev.toolCall.id, approvalId: ev.id },
           ],
         });
+      } else if (ev.type === "finish") {
+        if (ev.usage) get().patchMessage(convId, assistantId, { usage: ev.usage });
       } else if (ev.type === "error") {
         get().patchMessage(convId, assistantId, {
           content: (cur()?.content ?? "") + `\n\n> ⚠️ ${ev.message}`,
@@ -423,6 +426,44 @@ export const useStore = create<AppState>()(
         });
         get().setActiveChild(convId, userMsg.id, assistantId);
         runStream(convId, [...context, userMsg], userMsg, assistantId, set, get);
+      },
+
+      async continueFrom(assistantMessageId) {
+        const st = get();
+        const convId = st.activeId;
+        const settings = st.settings;
+        if (!convId || !settings) return;
+        const assistant = (st.messagesByConv[convId] ?? []).find((m) => m.id === assistantMessageId);
+        if (!assistant || assistant.role !== "assistant") return;
+        const fullPath = get().activePath(convId);
+        const idx = fullPath.findIndex((m) => m.id === assistantMessageId);
+        if (idx < 0) return;
+        // Prefill: context ends with the assistant's existing content; the model appends.
+        const context = fullPath.slice(0, idx + 1);
+        const controller = streamChat(
+          {
+            conversationId: convId,
+            messages: context,
+            providerId: settings.activeProviderId,
+            model: settings.activeModel,
+            reasoningEffort: st.reasoningEffort,
+            temperature: settings.temperature,
+            allowTools: false,
+            approvalPolicy: "destructive",
+          },
+          (ev) => {
+            const cur = () => get().messagesByConv[convId]?.find((m) => m.id === assistantMessageId);
+            if (ev.type === "delta") get().patchMessage(convId, assistantMessageId, { content: (cur()?.content ?? "") + ev.content });
+            else if (ev.type === "reasoning") get().patchMessage(convId, assistantMessageId, { reasoning: ((cur()?.reasoning ?? "") + ev.content) || undefined });
+            else if (ev.type === "error") get().patchMessage(convId, assistantMessageId, { content: (cur()?.content ?? "") + `\n\n> ⚠️ ${ev.message}` });
+          },
+          (err) => {
+            const cur = () => get().messagesByConv[convId]?.find((m) => m.id === assistantMessageId);
+            get().patchMessage(convId, assistantMessageId, { content: (cur()?.content ?? "") + `\n\n> ⚠️ ${err.message}` });
+          },
+          () => set({ stream: null }),
+        );
+        set({ stream: { conversationId: convId, assistantMessageId, controller } });
       },
 
       stream: null,

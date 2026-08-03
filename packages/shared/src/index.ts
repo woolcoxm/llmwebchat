@@ -107,6 +107,8 @@ export interface ChatMessage {
   pendingApprovals?: { toolCallId: string; approvalId: string }[];
   /** Model that produced an assistant message. */
   model?: string;
+  /** Token usage reported by the provider for an assistant turn. */
+  usage?: Usage;
   /** When the message was created. */
   createdAt: number;
   /** Parent message id — enables branching/forking (conversation tree). */

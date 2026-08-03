@@ -76,6 +76,7 @@ function ToolBlocks({ msg, convId }: { msg: ChatMessage; convId: string }) {
 export function Message({ msg, streaming }: { msg: ChatMessage; streaming?: boolean }) {
   const isUser = msg.role === "user";
   const regenerate = useStore((s) => s.regenerate);
+  const continueFrom = useStore((s) => s.continueFrom);
   const editResubmit = useStore((s) => s.editResubmit);
   const siblingsOf = useStore((s) => s.siblingsOf);
   const setActiveChild = useStore((s) => s.setActiveChild);
@@ -156,6 +157,10 @@ export function Message({ msg, streaming }: { msg: ChatMessage; streaming?: bool
                 onClick={() => regenerate(msg.id)}
                 className="hover:text-[var(--color-fg)]"
               >↻ regenerate</button>
+              <button
+                onClick={() => continueFrom(msg.id)}
+                className="hover:text-[var(--color-fg)]"
+              >⤓ continue</button>
               {ttsSupported() && (
                 <button
                   onClick={() => {
@@ -166,6 +171,12 @@ export function Message({ msg, streaming }: { msg: ChatMessage; streaming?: bool
                 >{speaking ? "⏹ stop" : "🔊 speak"}</button>
               )}
             </>
+          )}
+          {msg.usage && (
+            <span className="ml-auto text-[var(--color-muted)]/70">
+              ↑{msg.usage.promptTokens ?? "?"} ↓{msg.usage.completionTokens ?? "?"}
+              {msg.usage.totalTokens ? ` · ${msg.usage.totalTokens} tok` : ""}
+            </span>
           )}
         </div>
       )}
