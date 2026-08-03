@@ -64,21 +64,22 @@ The proxy holds secrets and executes tools, so hardening came first:
 - [ ] File & image upload (multimodal) — wire `Attachment` → provider image_url parts
 - [ ] Streaming auto-open of artifact panel on fenced blocks
 
-## 🔌 Phase 3 — Agentic layer (tools done; MCP/RAG pending)
+## ✅ Phase 3 — Agentic layer (core done; approvals pending)
 - [x] Built-in tools: `web_search`, `web_reader`, `read_file`, `write_file`, `run_bash` — sandboxed + settings-gated
 - [x] Tool-call/result rendering in the message stream; tools config UI in Settings
-- [ ] **MCP client** — connect MCP servers (filesystem, browser, etc.)
-- [ ] **RAG / project knowledge** — embed docs, hybrid search + rerank, `#`-inject
+- [x] **MCP client** — stdio JSON-RPC; connect any MCP server's tools (verified against a mock server)
+- [x] **RAG / project knowledge** — chunk + embed docs (Ollama /embeddings), cosine search, `knowledge_search` tool, ingest UI
 - [ ] Human-in-the-loop approvals for destructive tools
 - [ ] Browser agent (Playwright) — optional
 
-## 🌟 Phase 4 — Differentiators (partial)
-- [ ] **Multi-model arena** — n models side-by-side, A/B vote
+## 🌟 Phase 4 — Differentiators (mostly done)
+- [x] **Multi-model Arena** — 2–4 models stream side-by-side, 🏆 winner pick, stop-all
+- [x] **Voice mode** — STT dictation (Web Speech) + TTS speak on replies (no deps)
+- [x] Accent-color theming (7 presets, persisted)
+- [x] Auto-open artifacts for previewable blocks; command palette + shortcuts (from Phase 1)
 - [ ] Conversation-tree graph view + branch diffing
-- [ ] Voice mode (STT/TTS)
 - [ ] Prompt/agent library
-- [x] Command palette + global shortcuts (moved from Phase 1)
-- [ ] Theming system, PWA install + offline, Tauri desktop
+- [ ] PWA install + offline, Tauri desktop
 
 ## 👥 Phase 5 — Multi-user (optional, later)
 - [ ] Auth (Better-Auth/Lucia), backend-backed conversation storage & sync

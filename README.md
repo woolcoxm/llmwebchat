@@ -9,21 +9,29 @@
 ## ✨ What's here now
 - **Provider-agnostic** — Ollama, LM Studio, OpenRouter, or any custom OpenAI-compatible URL, all behind one client
 - **Reasoning stream** — model reasoning/thinking output rendered in a collapsible panel, with per-message effort control for reasoning-capable providers
-- **Agentic loop scaffold** — multi-round tool calling is wired in (tools land in Phase 3)
-- **Secrets stay in the proxy** — API keys never reach the browser; the server masks them
-- **Rich rendering** — Markdown + GFM + KaTeX (math) + syntax-highlighted, copy-able code blocks
-- **Conversation history** — sidebar with create/select/rename/delete, persisted in the browser
+- **Conversation branching/forking** — tree model; regenerate, edit-and-resubmit, and branch navigation (1/n prev/next)
+- **Artifacts panel** — live preview for HTML/SVG/Mermaid + in-browser **Python (Pyodide)** execution; auto-opens for previewable blocks
+- **Multi-model Arena** — stream one prompt across 2–4 models side-by-side, pick a 🏆 winner
+- **Agentic tools** — `web_search`, `web_reader` (SSRF-guarded), `read_file`, `write_file`, `run_bash` (sandboxed); multi-round tool loop
+- **MCP client** — connect any stdio Model Context Protocol server; its tools become callable by the model
+- **Knowledge base (RAG)** — ingest docs (chunked + embedded), retrieve via `knowledge_search`
+- **Multimodal** — attach images for vision-capable models
+- **Voice** — STT dictation into the composer + TTS speak for replies (Web Speech API)
+- **Command palette (⌘K)** + global shortcuts, conversation **search**, Markdown export, accent-color **theming**
+- **Secrets stay in the proxy** — API keys never reach the browser; masked in the UI
 - **Graceful offline** — local runners (Ollama) with live `/models` discovery and preset fallback
 
 ## 🧭 Roadmap (high level)
-| Phase | Theme |
-|---|---|
-| ✅ 0 | Foundation — streaming chat, settings, providers |
-| 🚧 1 | Power UX — branching/forking, command palette, keyboard, search |
-| 🎨 2 | Artifacts & rendering — live panels, in-browser code interpreter |
-| 🔌 3 | Agentic — tools, MCP, RAG/knowledge, web search, browser agent |
-| 🌟 4 | Differentiators — multi-model arena, voice, prompt library, PWA/Tauri |
-| 👥 5 | Multi-user (optional) |
+| Phase | Theme | Status |
+|---|---|---|
+| ✅ 0 | Foundation — streaming chat, settings, providers | done |
+| ✅ 1 | Power UX — branching, command palette, shortcuts, search | done |
+| ✅ 2 | Artifacts & rendering — live panels, Pyodide | core done |
+| ✅ 3 | Agentic — tools, MCP, RAG | core done |
+| 🌟 4 | Differentiators — arena, voice, theming | mostly done |
+| 👥 5 | Multi-user (optional) | later |
+
+See [PLAN.md](./PLAN.md) for the detailed checklist.
 
 ---
 
