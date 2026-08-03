@@ -3,6 +3,7 @@ import { useStore } from "../store.js";
 import { ModelPicker } from "./ModelPicker.js";
 import type { Attachment } from "@llmwebchat/shared";
 import { nanoid } from "nanoid";
+import { recognitionSupported, startDictation, type Dictation } from "../lib/speech.js";
 
 const REASONING_LEVELS = ["none", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
 
@@ -11,6 +12,9 @@ export function Composer() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [listening, setListening] = useState(false);
+  const dictRef = useRef<Dictation | null>(null);
+  const micSupported = recognitionSupported();
   const send = useStore((s) => s.send);
   const stop = useStore((s) => s.stop);
   const streaming = useStore((s) => !!s.stream);
@@ -34,6 +38,20 @@ export function Composer() {
     const atts = attachments.length ? attachments : undefined;
     setAttachments([]);
     void send(t, atts);
+  };
+
+  const toggleMic = () => {
+    if (listening) {
+      dictRef.current?.stop();
+      dictRef.current = null;
+      setListening(false);
+      return;
+    }
+    dictRef.current = startDictation(
+      (t) => setText((cur) => (cur ? cur + " " : "") + t),
+      () => setListening(false),
+    );
+    setListening(!!dictRef.current);
   };
 
   const onFiles = (files: FileList | null) => {
@@ -114,6 +132,15 @@ export function Composer() {
             >
               📎
             </button>
+            {micSupported && (
+              <button
+                onClick={toggleMic}
+                className={`ml-0.5 mb-2.5 w-8 h-8 grid place-items-center ${listening ? "text-red-400 animate-pulse" : "text-[var(--color-muted)] hover:text-[var(--color-fg)]"}`}
+                title={listening ? "Stop dictation" : "Dictate (voice)"}
+              >
+                🎤
+              </button>
+            )}
           <textarea
             ref={taRef}
             value={text}

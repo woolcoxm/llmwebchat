@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ChatMessage } from "@llmwebchat/shared";
 import { Markdown } from "./Markdown.js";
 import { useStore } from "../store.js";
+import { speak, stopSpeaking, ttsSupported } from "../lib/speech.js";
 
 function ReasoningBlock({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
@@ -60,6 +61,7 @@ export function Message({ msg, streaming }: { msg: ChatMessage; streaming?: bool
   const activeId = useStore((s) => s.activeId);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(msg.content);
+  const [speaking, setSpeaking] = useState(false);
 
   const convId = activeId ?? "";
   const siblings = activeId ? siblingsOf(convId, msg.id) : [msg];
@@ -133,6 +135,15 @@ export function Message({ msg, streaming }: { msg: ChatMessage; streaming?: bool
                 onClick={() => regenerate(msg.id)}
                 className="hover:text-[var(--color-fg)]"
               >↻ regenerate</button>
+              {ttsSupported() && (
+                <button
+                  onClick={() => {
+                    if (window.speechSynthesis.speaking) { stopSpeaking(); setSpeaking(false); }
+                    else { speak(msg.content); setSpeaking(true); }
+                  }}
+                  className="hover:text-[var(--color-fg)]"
+                >{speaking ? "⏹ stop" : "🔊 speak"}</button>
+              )}
             </>
           )}
         </div>
