@@ -60,6 +60,7 @@ interface AppState {
   deleteConversation: (id: string) => void;
   renameConversation: (id: string, title: string) => void;
   togglePin: (id: string) => void;
+  setConvSettings: (id: string, patch: { systemPrompt?: string; model?: string; temperature?: number }) => void;
   addMessage: (convId: string, msg: ChatMessage) => void;
   patchMessage: (convId: string, msgId: string, patch: Partial<ChatMessage>) => void;
   /** Walk root → active tip for a conversation. */
@@ -108,6 +109,8 @@ interface AppState {
   /* tree view */
   treeOpen: boolean;
   setTreeOpen: (b: boolean) => void;
+  convSettingsOpen: boolean;
+  setConvSettingsOpen: (b: boolean) => void;
   /** Make `msgId` the active tip by repointing activeChild along its path from root. */
   activatePathTo: (convId: string, msgId: string) => void;
 
@@ -163,14 +166,21 @@ function runStream(
 ) {
   const settings = get().settings;
   if (!settings) return;
+  const conv = get().conversations.find((c) => c.id === convId);
+  const model = conv?.model ?? settings.activeModel;
+  const temperature = conv?.temperature ?? settings.temperature;
+  const messages =
+    conv?.systemPrompt && context[0]?.role !== "system"
+      ? ([{ id: "sys", role: "system", content: conv.systemPrompt, createdAt: 0 } as ChatMessage, ...context])
+      : context;
   const controller = streamChat(
     {
       conversationId: convId,
-      messages: context, // root..userMsg (no placeholder)
+      messages,
       providerId: settings.activeProviderId,
-      model: settings.activeModel,
+      model,
       reasoningEffort: get().reasoningEffort,
-      temperature: settings.temperature,
+      temperature,
       allowTools: get().allowTools,
       approvalPolicy: settings.tools?.toolApproval ?? "destructive",
       enabledTools: [],
@@ -260,6 +270,11 @@ export const useStore = create<AppState>()(
       },
       togglePin(id) {
         set((st) => ({ conversations: st.conversations.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)) }));
+      },
+      setConvSettings(id, patch) {
+        set((st) => ({
+          conversations: st.conversations.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+        }));
       },
       addMessage(convId, msg) {
         set((st) => ({
@@ -438,6 +453,8 @@ export const useStore = create<AppState>()(
         const fullPath = get().activePath(convId);
         const idx = fullPath.findIndex((m) => m.id === assistantMessageId);
         if (idx < 0) return;
+        const conv = get().conversations.find((c) => c.id === convId);
+        const model = conv?.model ?? settings.activeModel;
         // Prefill: context ends with the assistant's existing content; the model appends.
         const context = fullPath.slice(0, idx + 1);
         const controller = streamChat(
@@ -445,9 +462,9 @@ export const useStore = create<AppState>()(
             conversationId: convId,
             messages: context,
             providerId: settings.activeProviderId,
-            model: settings.activeModel,
+            model,
             reasoningEffort: st.reasoningEffort,
-            temperature: settings.temperature,
+            temperature: conv?.temperature ?? settings.temperature,
             allowTools: false,
             approvalPolicy: "destructive",
           },
@@ -509,6 +526,10 @@ export const useStore = create<AppState>()(
       treeOpen: false,
       setTreeOpen(b) {
         set({ treeOpen: b });
+      },
+      convSettingsOpen: false,
+      setConvSettingsOpen(b) {
+        set({ convSettingsOpen: b });
       },
       activatePathTo(convId, msgId) {
         const msgs = get().messagesByConv[convId] ?? [];

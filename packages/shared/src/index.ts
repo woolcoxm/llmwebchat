@@ -128,6 +128,10 @@ export interface Conversation {
   currentMessageId?: string | null;
   providerId?: string;
   model?: string;
+  /** Per-conversation system prompt override (else the global default is used). */
+  systemPrompt?: string;
+  /** Per-conversation temperature override. */
+  temperature?: number;
   createdAt: number;
   updatedAt: number;
   /** Pinned to the top of the sidebar. */

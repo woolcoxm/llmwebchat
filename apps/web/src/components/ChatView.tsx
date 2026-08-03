@@ -15,6 +15,7 @@ export function ChatView() {
   const artifactOpen = useStore((s) => s.artifactOpen);
   const setArtifactOpen = useStore((s) => s.setArtifactOpen);
   const setArenaOpen = useStore((s) => s.setArenaOpen);
+  const setConvSettingsOpen = useStore((s) => s.setConvSettingsOpen);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,6 +37,13 @@ export function ChatView() {
         <div className="text-sm text-[var(--color-muted)] truncate">
           {activeProvider?.name} · {settings?.activeModel}
         </div>
+        <button
+          onClick={() => setConvSettingsOpen(true)}
+          className="px-2 py-1 rounded-md text-xs border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"
+          title="Conversation settings (system prompt, model, temperature)"
+        >
+          ⚙
+        </button>
         <button
           onClick={() => useStore.getState().setTreeOpen(true)}
           className="px-2 py-1 rounded-md text-xs border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"
