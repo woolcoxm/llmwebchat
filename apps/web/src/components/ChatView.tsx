@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore, computePath } from "../store.js";
 import { Message } from "./Message.js";
 import { Composer } from "./Composer.js";
+import { listModels } from "../lib/api.js";
 
 export function ChatView() {
   const activeId = useStore((s) => s.activeId);
@@ -24,6 +25,28 @@ export function ChatView() {
 
   const activeProvider = settings?.providers.find((p) => p.id === settings.activeProviderId);
   const needsKey = activeProvider?.id !== "ollama" && activeProvider?.id !== "lmstudio" && activeProvider?.hasKey === false;
+
+  // First-run reachability check: if the active provider can't be contacted
+  // (e.g. Ollama isn't running), surface a helpful banner instead of cryptic errors.
+  const [providerWarning, setProviderWarning] = useState<string | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setProviderWarning(null);
+    if (!settings?.activeProviderId) return;
+    listModels(settings.activeProviderId)
+      .then((m) => {
+        if (!alive) return;
+        if ((!m || m.length === 0) && (activeProvider?.id === "ollama" || activeProvider?.id === "lmstudio")) {
+          setProviderWarning(
+            activeProvider.id === "ollama"
+              ? "Ollama isn't reachable. Start it (ollama serve) and pull a model (ollama pull llama3.2), or switch provider in Settings."
+              : "LM Studio isn't reachable. Start its local server, or switch provider in Settings.",
+          );
+        }
+      })
+      .catch(() => { if (alive) setProviderWarning(`Couldn't reach ${activeProvider?.name ?? "the provider"}. Check the base URL / key in Settings.`); });
+    return () => { alive = false; };
+  }, [settings?.activeProviderId, activeProvider?.id, activeProvider?.name]);
 
   return (
     <div className="flex-1 flex flex-col h-full min-w-0">
@@ -103,6 +126,11 @@ export function ChatView() {
                 <span className="text-[var(--color-fg)]">{settings?.activeModel}</span> via{" "}
                 <span className="text-[var(--color-fg)]">{activeProvider?.name}</span>.
               </p>
+              {providerWarning && (
+                <div className="mb-4 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-sm text-amber-300">
+                  {providerWarning}
+                </div>
+              )}
               {needsKey && (
                 <div className="mb-4 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-sm text-amber-300">
                   This provider needs configuration (API key or a running local server).
