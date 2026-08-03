@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "../store.js";
 import { extractArtifacts, isRunnable, type Artifact } from "../lib/artifacts.js";
 import { ArtifactPreview } from "./ArtifactPreview.js";
@@ -26,6 +26,18 @@ export function ArtifactPanel() {
   const [tab, setTab] = useState<Tab>("preview");
   const [runResult, setRunResult] = useState<RunResult | null>(null);
   const [running, setRunning] = useState(false);
+  const lastAutoMsg = useRef<string | null>(null);
+
+  // Auto-open the panel when a previewable artifact (html/svg/mermaid) lands,
+  // once per assistant message. Doesn't auto-open for plain code.
+  useEffect(() => {
+    const msgId = lastAssistant?.id;
+    if (!msgId || msgId === lastAutoMsg.current) return;
+    if (artifacts.some((a) => a.previewable) && !open) {
+      lastAutoMsg.current = msgId;
+      useStore.getState().setArtifactOpen(true);
+    }
+  }, [lastAssistant?.id, artifacts, open]);
 
   if (!open) return null;
   const current: Artifact | undefined = artifacts[selected];

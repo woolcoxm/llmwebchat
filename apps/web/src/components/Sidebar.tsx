@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useStore } from "../store.js";
+import { ThemePicker } from "./ThemePicker.js";
 
 export function Sidebar() {
   const open = useStore((s) => s.sidebarOpen);
@@ -79,19 +80,22 @@ export function Sidebar() {
         ))}
       </div>
 
-      <div className="p-3 border-t border-[var(--color-border)]">
+      <div className="p-3 border-t border-[var(--color-border)] flex items-center gap-2">
         <button
           onClick={() => setSettingsOpen(true)}
-          className="w-full px-3 py-2 rounded-lg text-sm text-left text-[var(--color-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-fg)] flex items-center gap-2"
+          className="flex-1 px-3 py-2 rounded-lg text-sm text-left text-[var(--color-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-fg)] flex items-center gap-2"
         >
           ⚙ Settings
           {settings?.providers.find((p) => p.id === settings.activeProviderId)?.hasKey ===
-            false && (
+            false &&
+            settings?.activeProviderId !== "ollama" &&
+            settings?.activeProviderId !== "lmstudio" && (
             <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
               no key
             </span>
           )}
         </button>
+        <ThemePicker />
       </div>
     </aside>
   );
