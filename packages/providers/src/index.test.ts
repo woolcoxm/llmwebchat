@@ -50,6 +50,21 @@ describe("toWireMessages", () => {
     expect(out[2]).toEqual({ role: "user", content: "thanks" });
   });
 
+  it("does NOT emit tool messages when an assistant turn has tool calls but no results yet", () => {
+    const out = toWireMessages([
+      mk({
+        role: "assistant",
+        content: "let me check",
+        toolCalls: [{ id: "c1", name: "search", arguments: "{}" }],
+      }),
+      mk({ role: "user", content: "ok" }),
+    ]);
+    expect(out).toHaveLength(2);
+    expect(out[0]).toMatchObject({ role: "assistant" });
+    expect((out[0] as any).tool_calls).toBeDefined();
+    expect(out[1]).toEqual({ role: "user", content: "ok" });
+  });
+
   it("converts image attachments to image_url parts", () => {
     const out = toWireMessages([
       mk({
