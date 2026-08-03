@@ -66,7 +66,7 @@ export function ChatView() {
                 ].map((s) => (
                   <button
                     key={s}
-                    onClick={() => newConversation().length && useStore.getState().send(s)}
+                    onClick={() => useStore.getState().send(s)}
                     className="text-xs px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent)]/50 text-[var(--color-muted)] hover:text-[var(--color-fg)]"
                   >
                     {s}

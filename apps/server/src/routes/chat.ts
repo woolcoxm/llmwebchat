@@ -25,6 +25,20 @@ chat.post("/", async (c) => {
     return c.json({ type: "error", message: "Invalid JSON body" } satisfies ChatEvent, 400);
   }
 
+  // ---- Input validation ------------------------------------------------
+  if (
+    typeof body.providerId !== "string" ||
+    typeof body.model !== "string" ||
+    !Array.isArray(body.messages) ||
+    body.messages.length === 0 ||
+    body.messages.length > 1000
+  ) {
+    return c.json(
+      { type: "error", message: "Invalid request: providerId, model, and 1–1000 messages required." } satisfies ChatEvent,
+      400,
+    );
+  }
+
   const settings = loadSettings();
   const provider = settings.providers.find((p) => p.id === body.providerId);
   if (!provider) {
@@ -32,6 +46,22 @@ chat.post("/", async (c) => {
       { type: "error", message: `Unknown provider: ${body.providerId}` } satisfies ChatEvent,
       400,
     );
+  }
+
+  // ---- Build working message list (inject default system prompt) -------
+  const messages: ChatMessage[] = body.messages.map((m) => ({ ...m }));
+  const hasSystem = messages[0]?.role === "system";
+  if (
+    !hasSystem &&
+    settings.defaultSystemPrompt &&
+    settings.defaultSystemPrompt.trim().length > 0
+  ) {
+    messages.unshift({
+      id: "system-prompt",
+      role: "system",
+      content: settings.defaultSystemPrompt,
+      createdAt: 0,
+    });
   }
 
   const stream = new ReadableStream<Uint8Array>({
@@ -44,11 +74,9 @@ chat.post("/", async (c) => {
       send({ type: "start", messageId, model: body.model });
 
       // Agentic loop -----------------------------------------------------
-      const maxRounds = body.maxRounds ?? 10;
+      const maxRounds = Math.min(Math.max(body.maxRounds ?? 10, 1), 25);
       const enabledTools = body.allowTools ? listEnabledTools(body.enabledTools) : [];
       let rounds = 0;
-      // Working copy of messages we mutate across tool rounds.
-      const messages: ChatMessage[] = body.messages.map((m) => ({ ...m }));
 
       try {
         while (rounds++ <= maxRounds) {

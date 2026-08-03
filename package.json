@@ -5,7 +5,7 @@
   "description": "An advanced, provider-agnostic LLM web chat interface — z.ai GLM + local models, full-agentic.",
   "type": "module",
   "scripts": {
-    "dev": "pnpm --parallel --filter ./apps/* dev",
+    "dev": "pnpm --filter @llmwebchat/server dev & pnpm --filter @llmwebchat/web dev & wait",
     "dev:server": "pnpm --filter @llmwebchat/server dev",
     "dev:web": "pnpm --filter @llmwebchat/web dev",
     "build": "pnpm -r build",

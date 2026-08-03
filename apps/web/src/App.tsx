@@ -17,9 +17,10 @@ export default function App() {
 
   // Ensure there's always an active conversation.
   useEffect(() => {
-    if (!settingsLoading && !activeId && conversations.length === 0) {
+    if (settingsLoading) return;
+    if (!activeId && conversations.length === 0) {
       newConversation();
-    } else if (!settingsLoading && !activeId && conversations.length > 0) {
+    } else if (!activeId && conversations.length > 0) {
       useStore.getState().selectConversation(conversations[0].id);
     }
   }, [settingsLoading, activeId, conversations.length, newConversation]);
