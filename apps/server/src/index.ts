@@ -19,6 +19,7 @@ import { logger } from "hono/logger";
 import { chat } from "./routes/chat.js";
 import { models } from "./routes/models.js";
 import { settingsRouter } from "./routes/settings.js";
+import { toolsRouter } from "./routes/tools.js";
 import {
   authGate,
   bodySizeLimit,
@@ -43,6 +44,7 @@ app.get("/api/health", (c) =>
   c.json({ ok: true, name: "llmwebchat-server", version: "0.1.0" }),
 );
 app.route("/api/settings", settingsRouter);
+app.route("/api/tools", toolsRouter);
 app.route("/api/models", models);
 // Rate-limit the (expensive, tool-capable) chat endpoint.
 app.use("/api/chat/*", rateLimit({ windowMs: 60_000, max: 120 }));

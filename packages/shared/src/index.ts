@@ -139,6 +139,19 @@ export type ReasoningEffort =
   | "xhigh"
   | "max";
 
+export interface ToolsConfig {
+  /** Absolute path used as the sandbox root for file/bash tools. */
+  workspaceRoot?: string;
+  /** web_search + web_reader. Default true. */
+  allowWeb?: boolean;
+  /** read_file within workspaceRoot. Default true when workspaceRoot set. */
+  allowFiles?: boolean;
+  /** write_file (create/overwrite). Default false. */
+  allowWriteFiles?: boolean;
+  /** run_bash. Default false. */
+  allowBash?: boolean;
+}
+
 export interface Settings {
   /** Configured providers. */
   providers: ProviderConfig[];
@@ -154,6 +167,8 @@ export interface Settings {
   temperature?: number;
   /** Theme preference. */
   theme?: "system" | "light" | "dark";
+  /** Server-side tool configuration. */
+  tools?: ToolsConfig;
 }
 
 /* ------------------------------------------------------------------ */
@@ -274,5 +289,6 @@ export function defaultSettings(): Settings {
       "You are LLMWebChat, a helpful, precise assistant. Use tools when useful. Render rich content (tables, diagrams, code) in markdown.",
     temperature: undefined,
     theme: "system",
+    tools: { allowWeb: true },
   };
 }

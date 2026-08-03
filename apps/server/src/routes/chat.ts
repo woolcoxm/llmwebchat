@@ -13,7 +13,7 @@ import { Hono } from "hono";
 import { chatStream } from "@llmwebchat/providers";
 import type { ChatEvent, ChatMessage, ChatRequest, ToolCall } from "@llmwebchat/shared";
 import { loadSettings } from "../store.js";
-import { executeTool, listEnabledTools } from "../tools/index.js";
+import { buildTools, enabledToolDefs, executeTool } from "../tools/index.js";
 
 export const chat = new Hono();
 
@@ -75,7 +75,8 @@ chat.post("/", async (c) => {
 
       // Agentic loop -----------------------------------------------------
       const maxRounds = Math.min(Math.max(body.maxRounds ?? 10, 1), 25);
-      const enabledTools = body.allowTools ? listEnabledTools(body.enabledTools) : [];
+      const toolEntries = buildTools(settings);
+      const enabledTools = body.allowTools ? enabledToolDefs(toolEntries, body.enabledTools) : [];
       let rounds = 0;
 
       try {
@@ -135,7 +136,7 @@ chat.post("/", async (c) => {
           });
 
           for (const tc of toolCalls) {
-            const result = await executeTool(tc, c.req.raw.signal);
+            const result = await executeTool(toolEntries, tc);
             send({ type: "tool_result", result });
             messages.push({
               id: crypto.randomUUID(),
