@@ -9,6 +9,7 @@ import { Snippets } from "./components/Snippets.js";
 import { TreeView } from "./components/TreeView.js";
 import { ConvSettings } from "./components/ConvSettings.js";
 import { BranchCompare } from "./components/BranchCompare.js";
+import { ShortcutsHelp } from "./components/ShortcutsHelp.js";
 import { useStore } from "./store.js";
 
 export default function App() {
@@ -47,6 +48,7 @@ export default function App() {
       if (mod && e.key === ",") { e.preventDefault(); s.setSettingsOpen(true); return; }
       if (mod && e.key.toLowerCase() === "n") { e.preventDefault(); s.newConversation(); return; }
       if (mod && e.key === ".") { e.preventDefault(); s.stop(); return; }
+      if (e.key === "?" && !inField) { e.preventDefault(); s.setHelpOpen(true); return; }
       if (e.key === "Escape" && !inField) { s.setPaletteOpen(false); }
     };
     window.addEventListener("keydown", onKey);
@@ -65,6 +67,7 @@ export default function App() {
       <TreeView />
       <ConvSettings />
       <BranchCompare />
+      <ShortcutsHelp />
     </div>
   );
 }

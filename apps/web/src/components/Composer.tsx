@@ -28,6 +28,16 @@ export function Composer() {
   const setReasoningEffort = useStore((s) => s.setReasoningEffort);
   const allowTools = useStore((s) => s.allowTools);
   const setAllowTools = useStore((s) => s.setAllowTools);
+  const ctxTokens = useStore((s) => {
+    const id = s.activeId;
+    if (!id) return undefined;
+    const msgs = s.messagesByConv[id] ?? [];
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      const u = msgs[i]?.usage;
+      if (u?.promptTokens) return u.promptTokens;
+    }
+    return undefined;
+  });
 
   // autosize
   useEffect(() => {
@@ -220,7 +230,7 @@ export function Composer() {
           </div>
         </div>
         <p className="text-center text-[11px] text-[var(--color-muted)]/70 mt-2">
-          Provider-agnostic · local & cloud models · secrets stay in the proxy
+          {ctxTokens ? <span>≈ {ctxTokens.toLocaleString()} ctx tokens</span> : "Provider-agnostic"} · local & cloud models · secrets stay in the proxy · press <kbd className="text-[var(--color-fg)]">?</kbd> for shortcuts
         </p>
       </div>
     </div>
