@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ProviderConfig, Settings, ToolsConfig } from "@llmwebchat/shared";
+import type { McpServerConfig, ProviderConfig, Settings, ToolsConfig } from "@llmwebchat/shared";
 import { useStore } from "../store.js";
 
 const MASKED = "••••••••";
@@ -203,6 +203,62 @@ export function SettingsModal() {
               only in folders you trust. Web tools block SSRF (private/localhost/metadata IPs).
             </p>
           </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
+                MCP servers (stdio)
+              </h3>
+              <button
+                onClick={() =>
+                  setDraft({
+                    ...draft,
+                    tools: {
+                      ...draft.tools,
+                      mcpServers: [
+                        ...(draft.tools?.mcpServers ?? []),
+                        { name: "server-" + (draft.tools?.mcpServers?.length ?? 0), command: "npx", args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"] },
+                      ],
+                    },
+                  })
+                }
+                className="text-xs px-2 py-1 rounded border border-[var(--color-border)] hover:border-[var(--color-accent)]/50"
+              >
+                + Server
+              </button>
+            </div>
+            <div className="space-y-2">
+              {(draft.tools?.mcpServers ?? []).map((s, i) => (
+                <McpRow
+                  key={i}
+                  server={s}
+                  onChange={(ns) =>
+                    setDraft({
+                      ...draft,
+                      tools: {
+                        ...draft.tools,
+                        mcpServers: (draft.tools?.mcpServers ?? []).map((x, j) => (j === i ? ns : x)),
+                      },
+                    })
+                  }
+                  onRemove={() =>
+                    setDraft({
+                      ...draft,
+                      tools: {
+                        ...draft.tools,
+                        mcpServers: (draft.tools?.mcpServers ?? []).filter((_, j) => j !== i),
+                      },
+                    })
+                  }
+                />
+              ))}
+              {(draft.tools?.mcpServers?.length ?? 0) === 0 && (
+                <p className="text-[11px] text-[var(--color-muted)]">
+                  No MCP servers. Add e.g. the filesystem or fetch server; its tools become callable by the model.
+                </p>
+              )}
+            </div>
+          </section>
         </div>
 
         <div className="sticky bottom-0 flex justify-end gap-2 px-5 py-4 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
@@ -253,5 +309,41 @@ function Toggle({
       />
       <span className="text-[var(--color-fg)]">{label}</span>
     </label>
+  );
+}
+
+function McpRow({
+  server,
+  onChange,
+  onRemove,
+}: {
+  server: McpServerConfig;
+  onChange: (s: McpServerConfig) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-[var(--color-border)] p-2 space-y-1.5">
+      <div className="flex gap-2">
+        <input
+          value={server.name}
+          onChange={(e) => onChange({ ...server, name: e.target.value })}
+          placeholder="name"
+          className="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]"
+        />
+        <button onClick={onRemove} className="text-[11px] text-red-400/70 hover:text-red-400 px-1">remove</button>
+      </div>
+      <input
+        value={server.command}
+        onChange={(e) => onChange({ ...server, command: e.target.value })}
+        placeholder="command (e.g. npx)"
+        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]"
+      />
+      <input
+        value={(server.args ?? []).join(" ")}
+        onChange={(e) => onChange({ ...server, args: e.target.value.split(" ").filter(Boolean) })}
+        placeholder="args (space-separated)"
+        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]"
+      />
+    </div>
   );
 }

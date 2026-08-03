@@ -141,6 +141,14 @@ export type ReasoningEffort =
   | "xhigh"
   | "max";
 
+export interface McpServerConfig {
+  name: string;
+  command: string;
+  args?: string[];
+  env?: Record<string, string>;
+  cwd?: string;
+}
+
 export interface ToolsConfig {
   /** Absolute path used as the sandbox root for file/bash tools. */
   workspaceRoot?: string;
@@ -152,6 +160,8 @@ export interface ToolsConfig {
   allowWriteFiles?: boolean;
   /** run_bash. Default false. */
   allowBash?: boolean;
+  /** MCP servers to connect (stdio). Each exposes its tools to the model. */
+  mcpServers?: McpServerConfig[];
 }
 
 export interface Settings {

@@ -18,6 +18,7 @@ import {
 } from "./files.js";
 import { runBashDef, makeRunBash } from "./bash.js";
 import { webReaderDef, webSearchDef, webReader, webSearch } from "./web.js";
+import { mcpClients } from "../mcp/registry.js";
 
 type Runner = (args: unknown) => Promise<string>;
 export interface ToolEntry {
@@ -65,6 +66,22 @@ export function buildTools(settings: Settings): ToolEntry[] {
       destructive: true,
     },
   ];
+
+  // MCP server tools (only when configured + connected). Names are prefixed
+  // `<server>__<tool>`; we strip the prefix back off when invoking the server.
+  if (t.mcpServers?.length) {
+    for (const client of mcpClients()) {
+      const prefix = `${client.serverName}__`;
+      for (const def of client.tools) {
+        const origName = def.name.startsWith(prefix) ? def.name.slice(prefix.length) : def.name;
+        entries.push({
+          def,
+          run: (args) => client.callTool(origName, args),
+          enabled: true,
+        });
+      }
+    }
+  }
   return entries;
 }
 
