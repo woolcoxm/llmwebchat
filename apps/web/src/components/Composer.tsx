@@ -97,7 +97,7 @@ export function Composer() {
           </div>
         </div>
         <p className="text-center text-[11px] text-[var(--color-muted)]/70 mt-2">
-          Provider-agnostic · z.ai GLM + local models · secrets stay in the proxy
+          Provider-agnostic · local & cloud models · secrets stay in the proxy
         </p>
       </div>
     </div>

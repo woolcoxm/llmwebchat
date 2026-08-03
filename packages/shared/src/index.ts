@@ -12,17 +12,17 @@
 /* ------------------------------------------------------------------ */
 
 /**
- * A provider is any OpenAI-compatible endpoint. z.ai and Ollama are just
- * preset configs — there is no special-casing in the code.
+ * A provider is any OpenAI-compatible endpoint. All presets (Ollama, LM Studio,
+ * OpenRouter) are just preset configs — there is no special-casing in the code.
  */
 export interface ProviderConfig {
-  /** Stable id, e.g. "zai", "ollama", "openrouter" */
+  /** Stable id, e.g. "ollama", "openrouter", "lmstudio" */
   id: string;
   /** Human label */
   name: string;
   /** Kind. Always openai-compatible today; kept extensible for Anthropic-native etc. */
   kind: "openai-compatible";
-  /** Base URL without trailing slash, e.g. "https://api.z.ai/api/paas/v4" */
+  /** Base URL without trailing slash, e.g. "http://localhost:11434/v1" or "https://openrouter.ai/api/v1" */
   baseURL: string;
   /** API key. Server-side only — never sent to the browser. */
   apiKey?: string;
@@ -32,6 +32,8 @@ export interface ProviderConfig {
   headers?: Record<string, string>;
   /** Known model ids for quick UI hints (discovered live via /models otherwise). */
   models?: ModelInfo[];
+  /** Provider supports a reasoning effort param (sends reasoning_effort/thinking). */
+  reasoning?: boolean;
   /** Marks built-in presets so the UI hides their delete button. */
   builtin?: boolean;
   /** Server-set: whether an API key is stored (client never sees the key). */
@@ -91,7 +93,7 @@ export interface ChatMessage {
   id: string;
   role: Role;
   content: string;
-  /** Reasoning / chain-of-thought text (z.ai "reasoning_content"). */
+  /** Reasoning / chain-of-thought text (e.g. "reasoning_content"). */
   reasoning?: string;
   /** Attachments on this message (images, files). */
   attachments?: Attachment[];
@@ -159,7 +161,7 @@ export interface Settings {
   activeProviderId: string;
   /** Active model id. */
   activeModel: string;
-  /** Default reasoning effort (z.ai reasoning_effort). */
+  /** Default reasoning effort (sent to reasoning-capable providers). */
   defaultReasoningEffort: ReasoningEffort;
   /** System prompt prepended to every chat if conversation has none. */
   defaultSystemPrompt?: string;
@@ -234,29 +236,30 @@ export interface ToolDef {
 /** Built-in provider presets shipped out of the box. apiKey is optional. */
 export const PROVIDER_PRESETS: ProviderConfig[] = [
   {
-    id: "zai",
-    name: "Z.AI (GLM Coding Plan)",
-    kind: "openai-compatible",
-    baseURL: "https://api.z.ai/api/paas/v4",
-    builtin: true,
-    headers: {},
-    models: [
-      { id: "glm-5.2", name: "GLM-5.2", reasoning: true, vision: true },
-      { id: "glm-5.1", name: "GLM-5.1", reasoning: true, vision: true },
-      { id: "glm-5", name: "GLM-5", reasoning: true, vision: true },
-      { id: "glm-5-turbo", name: "GLM-5-Turbo", reasoning: true },
-      { id: "glm-4.7", name: "GLM-4.7", reasoning: true },
-      { id: "glm-4.6", name: "GLM-4.6", reasoning: true, vision: true },
-      { id: "glm-4.5", name: "GLM-4.5", reasoning: true, vision: true },
-      { id: "glm-4-32b-0414-128k", name: "GLM-4-32B (128K)", contextLength: 131072 },
-    ],
-  },
-  {
     id: "ollama",
     name: "Ollama (local)",
     kind: "openai-compatible",
     baseURL: "http://localhost:11434/v1",
     apiKey: "ollama",
+    builtin: true,
+    headers: {},
+    models: [
+      { id: "llama3.2", name: "Llama 3.2" },
+      { id: "llama3.1", name: "Llama 3.1" },
+      { id: "qwen2.5", name: "Qwen 2.5" },
+      { id: "qwen2.5-coder", name: "Qwen 2.5 Coder" },
+      { id: "deepseek-r1", name: "DeepSeek R1", reasoning: true },
+      { id: "phi3", name: "Phi-3" },
+      { id: "mistral", name: "Mistral" },
+      { id: "gemma2", name: "Gemma 2" },
+    ],
+  },
+  {
+    id: "lmstudio",
+    name: "LM Studio (local)",
+    kind: "openai-compatible",
+    baseURL: "http://localhost:1234/v1",
+    apiKey: "lm-studio",
     builtin: true,
     headers: {},
   },
@@ -268,22 +271,13 @@ export const PROVIDER_PRESETS: ProviderConfig[] = [
     builtin: true,
     headers: {},
   },
-  {
-    id: "lmstudio",
-    name: "LM Studio (local)",
-    kind: "openai-compatible",
-    baseURL: "http://localhost:1234/v1",
-    apiKey: "lm-studio",
-    builtin: true,
-    headers: {},
-  },
 ];
 
 export function defaultSettings(): Settings {
   return {
     providers: PROVIDER_PRESETS.map((p) => ({ ...p })),
-    activeProviderId: "zai",
-    activeModel: "glm-5.2",
+    activeProviderId: "ollama",
+    activeModel: "llama3.2",
     defaultReasoningEffort: "high",
     defaultSystemPrompt:
       "You are LLMWebChat, a helpful, precise assistant. Use tools when useful. Render rich content (tables, diagrams, code) in markdown.",

@@ -1,14 +1,14 @@
 # LLMWebChat
 
-> An advanced, provider-agnostic LLM web chat interface. z.ai GLM + local models, full-agentic, local-first with a secrets-holding proxy.
+> An advanced, provider-agnostic LLM web chat interface. Local-first (Ollama/LM Studio) with support for any OpenAI-compatible cloud provider, full-agentic, secrets held in the proxy.
 
 **Status:** Phase 0 (foundation) — streaming chat to GLM and any OpenAI-compatible endpoint is working end-to-end. See [PLAN.md](./PLAN.md) for what's built and what's next, [DESIGN.md](./DESIGN.md) for architecture, and [RESEARCH.md](./RESEARCH.md) for the competitive analysis it's based on.
 
 ---
 
 ## ✨ What's here now
-- **Provider-agnostic** — z.ai, Ollama, OpenRouter, LM Studio, or any custom OpenAI-compatible URL, all behind one client
-- **Reasoning stream** — GLM deep-thinking (`reasoning_content`) rendered in a collapsible panel, with per-message effort control (`max → none`)
+- **Provider-agnostic** — Ollama, LM Studio, OpenRouter, or any custom OpenAI-compatible URL, all behind one client
+- **Reasoning stream** — model reasoning/thinking output rendered in a collapsible panel, with per-message effort control for reasoning-capable providers
 - **Agentic loop scaffold** — multi-round tool calling is wired in (tools land in Phase 3)
 - **Secrets stay in the proxy** — API keys never reach the browser; the server masks them
 - **Rich rendering** — Markdown + GFM + KaTeX (math) + syntax-highlighted, copy-able code blocks
@@ -41,8 +41,8 @@ apps/
 
 ## ✅ Prerequisites
 - **Node.js ≥ 20** and **pnpm** (`npm i -g pnpm` or `corepack enable`)
-- An **Ollama** daemon running locally (optional, for local models)
-- A **z.ai** API key (optional, for GLM) — get one at <https://z.ai/manage-apikey/apikey-list>
+- A **local model runner** (recommended): [Ollama](https://ollama.com) — `ollama pull llama3.2`
+- Optionally, an API key for a cloud OpenAI-compatible provider (OpenRouter, etc.)
 
 ## 🚀 Quick start
 
@@ -50,15 +50,15 @@ apps/
 # 1. Install everything (monorepo)
 pnpm install
 
-# 2. (Optional) seed a z.ai key into the proxy
+# 2. (Optional) pre-seed a provider key into the proxy
 cp .env.example .env
-#   edit .env and set ZAI_API_KEY=...
+#   edit .env as needed
 
 # 3. Dev mode — runs proxy (:8787) + web (:5173) together
 pnpm dev
 #   then open http://localhost:5173
 ```
-In dev, the web app proxies `/api/*` to `:8787`, so you use one origin. Add your API key in **Settings** (gear icon) — it's stored in `apps/server/data/settings.json` (gitignored).
+In dev, the web app proxies `/api/*` to `:8787`, so you use one origin. Configure providers and add API keys in **Settings** (gear icon) — stored in `apps/server/data/settings.json` (gitignored).
 
 ## 📦 Production / single-port build
 
@@ -76,16 +76,17 @@ Everything is configurable from the **Settings** UI:
 
 You can also pre-seed via env (see `.env.example`):
 ```
-ZAI_API_KEY=...            # z.ai GLM Coding Plan (international)
 OLLAMA_BASE_URL=http://localhost:11434
-LLMWEBCHAT_DATA_DIR=./data  # where the proxy stores settings.json
+OPENROUTER_API_KEY=...        # optional, for the OpenRouter preset
+LLMWEBCHAT_DATA_DIR=./data    # where the proxy stores settings.json
 PORT=8787
 ```
 
-## ⚠️ z.ai Coding Plan — please read
-z.ai's [Usage Policy](https://docs.z.ai/devpack/usage-policy) states the GLM Coding Plan *"may only be used within officially supported tools and products. Use in unsupported tools may result in restricted benefits."* Supported tools are coding agents (Claude Code, Cline, Cursor, Pi, …) — **not** a general web chat.
-
-LLMWebChat is built provider-agnostic on purpose: if a coding-plan key gets flagged, switch the active provider to the z.ai metered API, OpenRouter, or local Ollama without changing any code. **You own the key and the backend.**
+## 🔒 Security & privacy
+- The proxy binds to **127.0.0.1** by default — no network exposure. Set `LLMWEBCHAT_HOST` to override (then also set `LLMWEBCHAT_AUTH_TOKEN`).
+- API keys live only in the proxy; the browser never sees them.
+- Server-side tools are sandboxed: web tools block SSRF (private/loopback/metadata IPs), file tools are confined to a workspace root, `run_bash` is **off by default** and runs with a sanitized environment.
+- It's provider-agnostic by design: pick whatever backend suits you.
 
 ## 🛠️ Development
 

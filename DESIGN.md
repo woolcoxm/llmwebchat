@@ -4,17 +4,11 @@
 
 ---
 
-## 0. The z.ai policy decision (resolve before building)
+## 0. The provider decision (resolved)
 
-From RESEARCH.md §4: the GLM Coding Plan officially permits only supported *coding tools*. A generic web chat is out of scope and risks rate-limit/ban. **Three honest paths** — pick one:
+Built **provider-agnostic** so the UI doesn't care which backend is plugged in. Default backend is **local Ollama** (free, private, compliant). Any OpenAI-compatible endpoint (LM Studio, OpenRouter, cloud APIs) drops in via Settings.
 
-| Path | Cost | Compliance | Fit |
-|---|---|---|---|
-| **A. Coding-plan key in a custom web UI** | $18–200/mo flat | ⚠️ violates ToS spirit; risk of flagging | Technically works (OpenAI-compatible). Can present itself like a coding agent. |
-| **B. z.ai pay-as-you-go API** (`api.z.ai`, metered) | ~$0.10/M tok (GLM-4.6) | ✅ fully allowed for any client | "Paid API" — you said avoid this |
-| **C. Local models only** (Ollama) | free | ✅ fully compliant | Less capable, but free + private |
-
-**Recommendation:** Build **provider-agnostic** so the UI doesn't care which backend is plugged in. Default to **Path A** (your stated intent) with the key stored client-side, but make B and C one-config-switch away. If Path A gets your key flagged, you lose nothing by switching the endpoint. **Build it so the user owns the key and the backend, not us.**
+> **z.ai was evaluated and excluded.** Its GLM Coding Plan ToS limits use to officially-supported coding tools; a general web chat is out of scope and would risk account flagging. The agnostic design means a user may still add it as a custom provider at their own discretion — but it's not promoted or special-cased in the code.
 
 ---
 
@@ -86,29 +80,29 @@ Beyond copying the best of each product, ship these as headline features:
 | Auth (optional) | Better-Auth / Lucia | multi-user when needed |
 | Tests | Vitest + Playwright | |
 
-## 5. z.ai integration specifics
+## 5. Provider integration (generic)
 
 ```ts
-// Single provider config, user-owned
+// Any OpenAI-compatible provider is configured the same way (user-owned key).
 const client = createOpenAICompatible({
-  name: 'zai',
-  baseURL: 'https://api.z.ai/api/paas/v4',   // OpenAI-compatible
-  apiKey: settings.providers.zai.apiKey,       // user's ZAI_API_KEY
-  headers: { /* present like a coding tool */ },
+  baseURL: provider.baseURL,           // e.g. http://localhost:11434/v1 or https://openrouter.ai/api/v1
+  apiKey: settings.providers[p].apiKey, // stored in the proxy only
+  headers: provider.headers ?? {},
 });
 
-// Streaming + deep thinking
+// Streaming + optional reasoning (sent only when provider.reasoning === true)
 const stream = await streamText({
-  model: client.chat('glm-5.2'),
+  model: client.chat(provider.activeModel),
   messages,
-  // z.ai reasoning_effort maps directly:
-  providerOptions: { thinking: { type: 'enabled' }, reasoning_effort: 'max' },
-  tools,            // function calling
-  onStepFinish,     // tool-call events → UI
+  providerOptions: provider.reasoning
+    ? { thinking: { type: 'enabled' }, reasoning_effort }
+    : undefined,
+  tools,           // function calling
+  onStepFinish,    // tool-call events → UI
 });
 ```
-- Reasoning content arrives in `delta.reasoning` → render in collapsible "thinking" panel
-- Tools (web search, image gen, OCR) = z.ai's separate tool endpoints, wrapped as MCP-style tools
+- Reasoning content arrives in `delta.reasoning` → collapsible "thinking" panel
+- Tools (web search, image gen, OCR) are implemented as sandboxed server-side tools
 
 ## 6. Local model integration
 

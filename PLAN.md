@@ -5,15 +5,21 @@
 ---
 
 ## Decisions (locked)
-1. **Provider-agnostic** — one OpenAI-compatible client speaks to z.ai, Ollama, OpenRouter, LM Studio, anything.
+1. **Provider-agnostic** — one OpenAI-compatible client speaks to Ollama, LM Studio, OpenRouter, or any custom endpoint. (z.ai was evaluated and **excluded** — its GLM Coding Plan ToS limits use to supported coding tools, not a general web chat. Any user can still add it as a custom provider at their own risk.)
 2. **Proxy server included** — holds secrets, hosts tools/MCP/RAG/code-sandbox, serves the SPA in production.
 3. **Frontend** — Vite + React SPA (PWA-first, Tauri-wrappable later — *deferred, not ruled out*).
 4. **Name** — **LLMWebChat**.
 5. **Scope** — full-agentic: tools, web search, code interpreter, MCP, browser agent, RAG.
 6. **Users** — single-user for now (multi-user/collaboration is a later phase).
 
-## ⚠️ Standing caveat
-z.ai's GLM Coding Plan officially permits only supported *coding tools*. A custom web chat is out of scope and **risks rate-limiting / key flagging**. Mitigation: the app is provider-agnostic, so you can flip to z.ai metered API, OpenRouter free tier, or local Ollama with one config change. Build it so the user owns the key and backend.
+## 🔒 Security posture (done)
+The proxy holds secrets and executes tools, so hardening came first:
+- binds **127.0.0.1** only (opt-out via `LLMWEBCHAT_HOST`)
+- CORS allowlist of local origins (CSRF defence) + optional bearer-token gate
+- body-size cap + per-IP rate limit on `/api/chat`
+- chat route validates provider/model/messages and caps rounds
+- tools sandboxed: SSRF guard (private/loopback/metadata blocked), path-traversal guard, sanitized env for subprocesses
+- `run_bash` and `write_file` are **off by default**
 
 ---
 

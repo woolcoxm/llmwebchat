@@ -38,7 +38,6 @@ function seedFromEnv(base: Settings): Settings {
 }
 
 const ENV_KEYS: Record<string, string> = {
-  zai: "ZAI_API_KEY",
   openrouter: "OPENROUTER_API_KEY",
 };
 

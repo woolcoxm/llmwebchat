@@ -1,7 +1,7 @@
 /**
  * @llmwebchat/providers — a single streaming client that speaks the
  * OpenAI-compatible Chat Completions API and normalises provider quirks
- * (notably z.ai's `reasoning_content` for deep-thinking / reasoning stream).
+ * (notably providers that emit `reasoning_content` for a reasoning stream).
  *
  * No SDK dependency — just fetch + SSE parsing. Runs in Node (proxy) and
  * could run in the browser too.
@@ -127,7 +127,7 @@ function toWireTools(tools?: ToolDef[]) {
 }
 
 /**
- * Provider-specific request body tweaks. z.ai maps reasoning_effort natively;
+ * Provider-specific request body tweaks. Reasoning-capable providers map reasoning_effort natively;
  * other OpenAI-compatible servers ignore unknown keys safely in practice,
  * but we only add it for providers that support it.
  */
@@ -145,10 +145,9 @@ function buildBody(params: ChatParams): Record<string, unknown> {
     body.tool_choice = "auto";
   }
 
-  // z.ai deep-thinking (also accepted by GLM via OpenAI-compat path)
-  const supportsReasoning =
-    provider.id === "zai" || model.toLowerCase().includes("glm");
-  if (supportsReasoning && reasoningEffort && reasoningEffort !== "none") {
+  // Reasoning effort: only sent when the provider opts in (e.g. reasoning-capable
+  // models). Other servers ignore unknown fields, but we gate it to be safe.
+  if (provider.reasoning === true && reasoningEffort && reasoningEffort !== "none") {
     body.thinking = { type: "enabled" };
     body.reasoning_effort = reasoningEffort;
   }
@@ -225,7 +224,7 @@ export async function* chatStream(params: ChatParams): AsyncGenerator<ChatStream
           if (typeof delta.content === "string" && delta.content.length > 0) {
             yield { type: "delta", content: delta.content };
           }
-          // z.ai + some providers surface reasoning in reasoning_content
+          // some providers surface reasoning in reasoning_content
           if (
             typeof delta.reasoning_content === "string" &&
             delta.reasoning_content.length > 0

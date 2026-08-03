@@ -172,9 +172,9 @@ export function SettingsModal() {
               })}
             </div>
             <p className="text-[11px] text-[var(--color-muted)] mt-3">
-              ⚠️ z.ai's GLM Coding Plan officially permits only supported coding tools. A custom
-              web UI may risk rate-limiting. z.ai + Ollama both speak the same OpenAI-compatible
-              protocol, so you can switch any time.
+              Add any OpenAI-compatible endpoint (local runners like Ollama/LM Studio,
+              or cloud APIs). All providers speak the same protocol, so you can switch
+              freely. Keys are stored in the proxy only — never in the browser.
             </p>
           </section>
         </div>

@@ -6,8 +6,8 @@ import { listModels } from "../lib/api.js";
 export function ModelPicker() {
   const settings = useStore((s) => s.settings);
   const saveSettings = useStore((s) => s.saveSettings);
-  const activeProviderId = settings?.activeProviderId ?? "zai";
-  const activeModel = settings?.activeModel ?? "glm-5.2";
+  const activeProviderId = settings?.activeProviderId ?? "ollama";
+  const activeModel = settings?.activeModel ?? "llama3.2";
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [loading, setLoading] = useState(false);
 

@@ -3,7 +3,7 @@
  *
  * Responsibilities:
  *  - hold secrets (API keys) — never expose raw to the browser
- *  - proxy OpenAI-compatible streaming to z.ai / Ollama / etc.
+ *  - proxy OpenAI-compatible streaming to Ollama / LM Studio / cloud APIs
  *  - host server-side tools (web_search, code_interpreter, MCP)  [Phase 3]
  *  - serve the built web app from web-dist in production
  *

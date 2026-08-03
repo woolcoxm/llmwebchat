@@ -1,11 +1,13 @@
-import { useEffect, useRef } from "react";
-import { useStore } from "../store.js";
+import { useEffect, useMemo, useRef } from "react";
+import { useStore, computePath } from "../store.js";
 import { Message } from "./Message.js";
 import { Composer } from "./Composer.js";
 
 export function ChatView() {
   const activeId = useStore((s) => s.activeId);
-  const messages = useStore((s) => (activeId ? s.messagesByConv[activeId] : undefined) ?? []);
+  const rawMsgs = useStore((s) => (activeId ? s.messagesByConv[activeId] ?? [] : []));
+  const activeChildMap = useStore((s) => (activeId ? s.activeChild[activeId] ?? {} : {}));
+  const messages = useMemo(() => computePath(rawMsgs, activeChildMap), [rawMsgs, activeChildMap]);
   const stream = useStore((s) => s.stream);
   const settings = useStore((s) => s.settings);
   const newConversation = useStore((s) => s.newConversation);
@@ -19,7 +21,7 @@ export function ChatView() {
   }, [messages.length, messages[messages.length - 1]?.content]);
 
   const activeProvider = settings?.providers.find((p) => p.id === settings.activeProviderId);
-  const needsKey = activeProvider?.hasKey === false && activeProvider?.id !== "ollama";
+  const needsKey = activeProvider?.id !== "ollama" && activeProvider?.id !== "lmstudio" && activeProvider?.hasKey === false;
 
   return (
     <div className="flex-1 flex flex-col h-full min-w-0">
@@ -51,18 +53,18 @@ export function ChatView() {
               </div>
               <h1 className="text-2xl font-semibold mb-2">LLMWebChat</h1>
               <p className="text-[var(--color-muted)] mb-6">
-                An advanced, provider-agnostic chat. Talking to{" "}
+                A provider-agnostic chat, talking to{" "}
                 <span className="text-[var(--color-fg)]">{settings?.activeModel}</span> via{" "}
                 <span className="text-[var(--color-fg)]">{activeProvider?.name}</span>.
               </p>
               {needsKey && (
                 <div className="mb-4 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-sm text-amber-300">
-                  This provider has no API key set.
+                  This provider needs configuration (API key or a running local server).
                   <button
                     onClick={() => setSettingsOpen(true)}
                     className="underline ml-1"
                   >
-                    Add key →
+                    Open Settings →
                   </button>
                 </div>
               )}
