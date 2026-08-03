@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "../store.js";
+import { EMPTY_MSGS } from "../lib/empty.js";
 import { extractArtifacts, isRunnable, type Artifact } from "../lib/artifacts.js";
 import { ArtifactPreview } from "./ArtifactPreview.js";
 import { runPython, type RunResult } from "../lib/pyodide.js";
@@ -10,7 +11,7 @@ export function ArtifactPanel() {
   const open = useStore((s) => s.artifactOpen);
   const setOpen = useStore((s) => s.setArtifactOpen);
   const activeId = useStore((s) => s.activeId);
-  const messages = useStore((s) => (activeId ? s.messagesByConv[activeId] : undefined) ?? []);
+  const messages = useStore((s) => (activeId ? s.messagesByConv[activeId] : undefined) ?? EMPTY_MSGS);
 
   // Artifacts come from the latest assistant message with content.
   const lastAssistant = useMemo(

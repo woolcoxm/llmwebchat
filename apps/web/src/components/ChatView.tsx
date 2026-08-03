@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore, computePath } from "../store.js";
+import { EMPTY_MSGS, EMPTY_CHILD } from "../lib/empty.js";
 import { Message } from "./Message.js";
 import { Composer } from "./Composer.js";
 import { listModels } from "../lib/api.js";
 
 export function ChatView() {
   const activeId = useStore((s) => s.activeId);
-  const rawMsgs = useStore((s) => (activeId ? s.messagesByConv[activeId] ?? [] : []));
-  const activeChildMap = useStore((s) => (activeId ? s.activeChild[activeId] ?? {} : {}));
+  const rawMsgs = useStore((s) => (s.activeId ? s.messagesByConv[s.activeId] ?? EMPTY_MSGS : EMPTY_MSGS));
+  const activeChildMap = useStore((s) => (s.activeId ? s.activeChild[s.activeId] ?? EMPTY_CHILD : EMPTY_CHILD));
   const messages = useMemo(() => computePath(rawMsgs, activeChildMap), [rawMsgs, activeChildMap]);
   const stream = useStore((s) => s.stream);
   const settings = useStore((s) => s.settings);

@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useStore, computePath } from "../store.js";
+import { EMPTY_MSGS, EMPTY_CHILD } from "../lib/empty.js";
 import type { ChatMessage } from "@llmwebchat/shared";
 import { wordDiff, type DiffPart } from "../lib/diff.js";
 
@@ -13,8 +14,8 @@ export function BranchCompare() {
   const open = useStore((s) => s.compareOpen);
   const setOpen = useStore((s) => s.setCompareOpen);
   const activeId = useStore((s) => s.activeId);
-  const msgs = useStore((s) => (activeId ? s.messagesByConv[activeId] ?? [] : []));
-  const activeChildMap = useStore((s) => (activeId ? s.activeChild[activeId] ?? {} : {}));
+  const msgs = useStore((s) => (activeId ? s.messagesByConv[activeId] ?? EMPTY_MSGS : EMPTY_MSGS));
+  const activeChildMap = useStore((s) => (activeId ? s.activeChild[activeId] ?? EMPTY_CHILD : EMPTY_CHILD));
 
   const tips = useMemo(() => leaves(msgs), [msgs]);
   const [a, setA] = useState<string>("");
