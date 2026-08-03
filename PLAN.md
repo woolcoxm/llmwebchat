@@ -60,26 +60,31 @@ The proxy holds secrets and executes tools, so hardening came first:
 ## ✅ Phase 2 — Artifacts & rendering (core done)
 - [x] **Artifact side panel** — multi-tab: Source / live Preview / Run; HTML (sandboxed iframe) / SVG / Mermaid (lazy)
 - [x] **Code interpreter** — Pyodide (Python, WASM-sandboxed) lazy-loaded from CDN, stdout captured
-- [ ] Inline charts (Recharts), data tables, generative-UI cards
-- [ ] File & image upload (multimodal) — wire `Attachment` → provider image_url parts
-- [ ] Streaming auto-open of artifact panel on fenced blocks
+- [x] **Inline charts** — ```chart JSON rendered via Recharts (lazy chunk); bar/line/area/pie
+- [x] Auto-open artifacts for previewable blocks
+- [ ] File & image upload polish (images work; generic file attach pending)
+- [ ] Streaming auto-open tuning
 
-## ✅ Phase 3 — Agentic layer (core done; approvals pending)
+## ✅ Phase 3 — Agentic layer (done)
 - [x] Built-in tools: `web_search`, `web_reader`, `read_file`, `write_file`, `run_bash` — sandboxed + settings-gated
 - [x] Tool-call/result rendering in the message stream; tools config UI in Settings
 - [x] **MCP client** — stdio JSON-RPC; connect any MCP server's tools (verified against a mock server)
-- [x] **RAG / project knowledge** — chunk + embed docs (Ollama /embeddings), cosine search, `knowledge_search` tool, ingest UI
-- [ ] Human-in-the-loop approvals for destructive tools
+- [x] **RAG / project knowledge** — chunk + embed docs, cosine search, `knowledge_search` tool, ingest UI
+- [x] **Human-in-the-loop approvals** — destructive tools (write_file/run_bash/MCP) pause for Approve/Reject (verified end-to-end)
 - [ ] Browser agent (Playwright) — optional
 
 ## 🌟 Phase 4 — Differentiators (mostly done)
 - [x] **Multi-model Arena** — 2–4 models stream side-by-side, 🏆 winner pick, stop-all
+- [x] **Conversation tree view** — recursive graph, active path + tip highlight, click to switch branch
 - [x] **Voice mode** — STT dictation (Web Speech) + TTS speak on replies (no deps)
 - [x] Accent-color theming (7 presets, persisted)
-- [x] Auto-open artifacts for previewable blocks; command palette + shortcuts (from Phase 1)
-- [ ] Conversation-tree graph view + branch diffing
-- [ ] Prompt/agent library
+- [x] Command palette + global shortcuts; prompt snippets; conversation pinning + search
 - [ ] PWA install + offline, Tauri desktop
+
+## ✅ Quality
+- [x] **Test suite (vitest, 33 tests)** — SSRF guard, path-traversal guard, message serialization, chunking, cosine
+- [x] **GitHub Actions CI** (local; needs `workflow` token scope to push) — typecheck + tests + build
+- [x] **Code-split** — main bundle 824KB → 267KB (markdown/katex/highlight lazy)
 
 ## 👥 Phase 5 — Multi-user (optional, later)
 - [ ] Auth (Better-Auth/Lucia), backend-backed conversation storage & sync
