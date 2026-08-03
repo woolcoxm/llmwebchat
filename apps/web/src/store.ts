@@ -73,6 +73,8 @@ interface AppState {
   summarize: (convId: string) => Promise<string | null>;
   /** Summarize the active path and start a fresh chat seeded with the summary. */
   compactAndContinue: (convId: string) => Promise<void>;
+  /** Send a follow-up turn that acts on an existing message (summarize/explain/etc). */
+  quickAction: (messageId: string, prompt: string) => void;
   addMessage: (convId: string, msg: ChatMessage) => void;
   patchMessage: (convId: string, msgId: string, patch: Partial<ChatMessage>) => void;
   /** Walk root → active tip for a conversation. */
@@ -427,6 +429,14 @@ export const useStore = create<AppState>()(
               : c,
           ),
         }));
+      },
+      quickAction(messageId, prompt) {
+        const convId = get().activeId;
+        if (!convId) return;
+        const msg = (get().messagesByConv[convId] ?? []).find((m) => m.id === messageId);
+        if (!msg) return;
+        const quoted = msg.content.slice(0, 4000);
+        void get().send(`${prompt}\n\n> ${quoted}`);
       },
       addMessage(convId, msg) {
         set((st) => ({

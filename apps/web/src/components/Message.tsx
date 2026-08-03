@@ -77,6 +77,7 @@ export function Message({ msg, streaming }: { msg: ChatMessage; streaming?: bool
   const isUser = msg.role === "user";
   const regenerate = useStore((s) => s.regenerate);
   const continueFrom = useStore((s) => s.continueFrom);
+  const quickAction = useStore((s) => s.quickAction);
   const editResubmit = useStore((s) => s.editResubmit);
   const siblingsOf = useStore((s) => s.siblingsOf);
   const setActiveChild = useStore((s) => s.setActiveChild);
@@ -153,6 +154,14 @@ export function Message({ msg, streaming }: { msg: ChatMessage; streaming?: bool
                 onClick={() => navigator.clipboard.writeText(msg.content)}
                 className="hover:text-[var(--color-fg)]"
               >copy</button>
+              <button
+                onClick={() => quickAction(msg.id, "Summarize the following message concisely.")}
+                className="hover:text-[var(--color-fg)]"
+              >∑ summarize</button>
+              <button
+                onClick={() => quickAction(msg.id, "Explain the following in simpler terms for a beginner.")}
+                className="hover:text-[var(--color-fg)]"
+              >explain</button>
               <button
                 onClick={() => regenerate(msg.id)}
                 className="hover:text-[var(--color-fg)]"
