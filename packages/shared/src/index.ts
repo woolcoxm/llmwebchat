@@ -101,6 +101,8 @@ export interface ChatMessage {
   toolCalls?: ToolCall[];
   /** Tool results returned for prior tool calls. */
   toolResults?: ToolResult[];
+  /** Pending human-in-the-loop approvals for tool calls (transient UI state). */
+  pendingApprovals?: { toolCallId: string; approvalId: string }[];
   /** Model that produced an assistant message. */
   model?: string;
   /** When the message was created. */
@@ -160,6 +162,8 @@ export interface ToolsConfig {
   allowWriteFiles?: boolean;
   /** run_bash. Default false. */
   allowBash?: boolean;
+  /** Approval policy for destructive tools (write_file/run_bash/MCP): "destructive" pauses and asks the user; "never" auto-executes. Default "destructive". */
+  toolApproval?: "never" | "destructive";
   /** MCP servers to connect (stdio). Each exposes its tools to the model. */
   mcpServers?: McpServerConfig[];
   /** Embedding provider for the knowledge base (default: ollama). */
@@ -206,6 +210,8 @@ export interface ChatRequest {
   enabledTools?: string[];
   /** Whether tool execution/agentic loop is allowed. */
   allowTools?: boolean;
+  /** Approval policy for destructive tools: "destructive" (pause + ask) or "never". */
+  approvalPolicy?: "never" | "destructive";
   /** Max agentic tool-call rounds (default 10). */
   maxRounds?: number;
 }
@@ -220,6 +226,7 @@ export type ChatEvent =
   | { type: "delta"; content: string }
   | { type: "reasoning"; content: string }
   | { type: "tool_call"; toolCall: ToolCall }
+  | { type: "approval_request"; id: string; toolCall: ToolCall; destructive: boolean }
   | { type: "tool_result"; result: ToolResult }
   | { type: "finish"; messageId: string; model: string; finishReason?: string; usage?: Usage }
   | { type: "error"; message: string; status?: number };
@@ -297,6 +304,6 @@ export function defaultSettings(): Settings {
       "You are LLMWebChat, a helpful, precise assistant. Use tools when useful. Render rich content (tables, diagrams, code) in markdown.",
     temperature: undefined,
     theme: "system",
-    tools: { allowWeb: true },
+    tools: { allowWeb: true, toolApproval: "destructive" },
   };
 }

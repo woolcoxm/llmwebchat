@@ -198,6 +198,15 @@ export function SettingsModal() {
               <Toggle label="✏️ write_file" checked={draft.tools?.allowWriteFiles === true} onChange={(v) => patchTools({ allowWriteFiles: v })} disabled={!draft.tools?.workspaceRoot} />
               <Toggle label="⚙️ run_bash" checked={draft.tools?.allowBash === true} onChange={(v) => patchTools({ allowBash: v })} disabled={!draft.tools?.workspaceRoot} />
             </div>
+            <label className="flex items-center gap-2 mt-2 text-sm text-[var(--color-fg)]">
+              <input
+                type="checkbox"
+                checked={draft.tools?.toolApproval !== "never"}
+                onChange={(e) => patchTools({ toolApproval: e.target.checked ? "destructive" : "never" })}
+                className="accent-[var(--color-accent)]"
+              />
+              <span>🛡️ Require approval for destructive tools (write_file, run_bash, MCP)</span>
+            </label>
             <p className="text-[11px] text-[var(--color-muted)] mt-3">
               File & bash tools are sandboxed to the workspace root (path traversal blocked).
               <strong> run_bash</strong> and <strong>write_file</strong> are off by default — enable

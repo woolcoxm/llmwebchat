@@ -102,6 +102,14 @@ function toWireMessages(
       content: m.content,
       ...(m.toolCalls?.length ? { tool_calls: m.toolCalls.map(toWireToolCall) } : {}),
     });
+
+    // Reconstruct tool results so follow-up turns stay valid: an assistant
+    // turn that issued tool calls must be followed by role:tool result messages.
+    if (m.role === "assistant" && m.toolCalls?.length && m.toolResults?.length) {
+      for (const r of m.toolResults) {
+        out.push({ role: "tool", tool_call_id: r.toolCallId, content: r.content });
+      }
+    }
   }
   return out;
 }

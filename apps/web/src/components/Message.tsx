@@ -3,6 +3,7 @@ import type { ChatMessage } from "@llmwebchat/shared";
 import { Markdown } from "./Markdown.js";
 import { useStore } from "../store.js";
 import { speak, stopSpeaking, ttsSupported } from "../lib/speech.js";
+import { postApproval } from "../lib/api.js";
 
 function ReasoningBlock({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
@@ -25,12 +26,18 @@ function ReasoningBlock({ text }: { text: string }) {
   );
 }
 
-function ToolBlocks({ msg }: { msg: ChatMessage }) {
+function ToolBlocks({ msg, convId }: { msg: ChatMessage; convId: string }) {
   if (!msg.toolCalls?.length) return null;
+  const patchMessage = useStore.getState().patchMessage;
+  const clearPending = (tcId: string) =>
+    patchMessage(convId, msg.id, {
+      pendingApprovals: (msg.pendingApprovals ?? []).filter((p) => p.toolCallId !== tcId),
+    });
   return (
     <div className="mb-3 space-y-2">
       {msg.toolCalls.map((tc) => {
         const result = msg.toolResults?.find((r) => r.toolCallId === tc.id);
+        const pending = msg.pendingApprovals?.find((p) => p.toolCallId === tc.id);
         return (
           <div
             key={tc.id}
@@ -39,7 +46,21 @@ function ToolBlocks({ msg }: { msg: ChatMessage }) {
             <div className="px-3 py-1.5 bg-[var(--color-surface-2)] flex items-center gap-2">
               <span className="text-[var(--color-accent-fg)]">🔧 {tc.name}</span>
               <span className="text-[var(--color-muted)] truncate">{tc.arguments}</span>
+              {pending && <span className="ml-auto text-[10px] text-amber-400">awaiting approval</span>}
             </div>
+            {pending && (
+              <div className="px-3 py-2 flex items-center gap-2 border-t border-[var(--color-border)]">
+                <span className="text-[var(--color-muted)] text-xs flex-1">This tool can modify your system. Approve?</span>
+                <button
+                  onClick={() => { void postApproval(pending.approvalId, "approve"); clearPending(tc.id); }}
+                  className="text-xs px-2 py-1 rounded bg-emerald-600 text-white"
+                >Approve</button>
+                <button
+                  onClick={() => { void postApproval(pending.approvalId, "reject"); clearPending(tc.id); }}
+                  className="text-xs px-2 py-1 rounded bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-fg)]"
+                >Reject</button>
+              </div>
+            )}
             {result && (
               <pre className="px-3 py-2 whitespace-pre-wrap text-[var(--color-muted)] max-h-40 overflow-auto">
                 {result.content}
@@ -85,7 +106,7 @@ export function Message({ msg, streaming }: { msg: ChatMessage; streaming?: bool
             {isUser ? "You" : msg.model ?? "assistant"}
           </div>
           {msg.reasoning && <ReasoningBlock text={msg.reasoning} />}
-          <ToolBlocks msg={msg} />
+          <ToolBlocks msg={msg} convId={activeId ?? ""} />
           {isUser && msg.attachments?.some((a) => a.type.startsWith("image/")) && (
             <div className="flex flex-wrap gap-2 mb-2">
               {msg.attachments!.filter((a) => a.type.startsWith("image/")).map((a) => (

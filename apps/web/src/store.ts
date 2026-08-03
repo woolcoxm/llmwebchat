@@ -170,6 +170,7 @@ function runStream(
       reasoningEffort: get().reasoningEffort,
       temperature: settings.temperature,
       allowTools: get().allowTools,
+      approvalPolicy: settings.tools?.toolApproval ?? "destructive",
       enabledTools: [],
     },
     (ev) => {
@@ -183,6 +184,13 @@ function runStream(
         get().patchMessage(convId, assistantId, { toolCalls: [...(cur()?.toolCalls ?? []), ev.toolCall] });
       } else if (ev.type === "tool_result") {
         get().patchMessage(convId, assistantId, { toolResults: [...(cur()?.toolResults ?? []), ev.result] });
+      } else if (ev.type === "approval_request") {
+        get().patchMessage(convId, assistantId, {
+          pendingApprovals: [
+            ...(cur()?.pendingApprovals ?? []),
+            { toolCallId: ev.toolCall.id, approvalId: ev.id },
+          ],
+        });
       } else if (ev.type === "error") {
         get().patchMessage(convId, assistantId, {
           content: (cur()?.content ?? "") + `\n\n> ⚠️ ${ev.message}`,

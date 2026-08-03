@@ -9,7 +9,7 @@
  */
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
-import { isAbsolute, join, normalize, resolve } from "node:path";
+import { join, normalize, resolve, sep } from "node:path";
 
 /* ---------------------------- SSRF protection ---------------------------- */
 
@@ -101,14 +101,12 @@ export async function assertPublicUrl(
  */
 export function safeJoin(root: string, untrustedPath: string): string {
   const rootAbs = resolve(root);
-  // Normalize and strip leading slashes so users can't anchor to filesystem root.
-  const cleaned = normalize("/" + untrustedPath.replace(/^[/\\]+/, "")).replace(
-    /^([a-zA-Z]:)/,
-    "",
-  );
-  const target = isAbsolute(cleaned) ? cleaned : join(rootAbs, cleaned);
-  const rel = normalize(target);
-  if (rel !== rootAbs && !rel.startsWith(rootAbs + require("node:path").sep)) {
+  // Strip leading slashes / drive letters so paths can't anchor to fs root,
+  // then normalize to collapse `..`, keeping the path relative.
+  const stripped = untrustedPath.replace(/\\/g, "/").replace(/^[/\\]+/, "").replace(/^([a-zA-Z]:)/, "");
+  const cleaned = normalize(stripped).replace(/^[/\\]+/, "");
+  const rel = normalize(join(rootAbs, cleaned));
+  if (rel !== rootAbs && !rel.startsWith(rootAbs + sep)) {
     throw new Error(`Path escapes workspace root: ${untrustedPath}`);
   }
   return rel;

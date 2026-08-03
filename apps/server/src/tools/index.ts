@@ -90,6 +90,7 @@ export function buildTools(settings: Settings): ToolEntry[] {
           def,
           run: (args) => client.callTool(origName, args),
           enabled: true,
+          destructive: true, // MCP tools are powerful/unknown → require approval by default
         });
       }
     }

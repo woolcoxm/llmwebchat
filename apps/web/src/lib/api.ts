@@ -44,6 +44,13 @@ export async function ingestKb(text: string, source?: string) {
 export async function deleteKbItem(id: string) {
   await fetch(`/api/kb/${id}`, { method: "DELETE" });
 }
+export async function postApproval(id: string, decision: "approve" | "reject") {
+  await fetch("/api/approve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, decision }),
+  });
+}
 
 /**
  * Stream a chat completion. Calls onEvent for each NDJSON ChatEvent.

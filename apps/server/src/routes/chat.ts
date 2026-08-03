@@ -15,6 +15,7 @@ import type { ChatEvent, ChatMessage, ChatRequest, ToolCall } from "@llmwebchat/
 import { loadSettings } from "../store.js";
 import { buildTools, enabledToolDefs, executeTool } from "../tools/index.js";
 import { syncMcp } from "../mcp/registry.js";
+import { requestApproval } from "../approvals.js";
 
 export const chat = new Hono();
 
@@ -81,6 +82,10 @@ chat.post("/", async (c) => {
         await syncMcp(settings.tools.mcpServers).catch(() => {});
       }
       const toolEntries = buildTools(settings);
+      const approvalPolicy = body.approvalPolicy ?? settings.tools?.toolApproval ?? "destructive";
+      const needsApproval = (name: string) =>
+        approvalPolicy === "destructive" &&
+        !!toolEntries.find((e) => e.def.name === name)?.destructive;
       const enabledTools = body.allowTools ? enabledToolDefs(toolEntries, body.enabledTools) : [];
       let rounds = 0;
 
@@ -141,7 +146,20 @@ chat.post("/", async (c) => {
           });
 
           for (const tc of toolCalls) {
-            const result = await executeTool(toolEntries, tc);
+            let result;
+            if (needsApproval(tc.name)) {
+              const approvalId = crypto.randomUUID();
+              const destructive = true;
+              send({ type: "approval_request", id: approvalId, toolCall: tc, destructive });
+              const decision = await requestApproval(approvalId);
+              if (decision === "approve") {
+                result = await executeTool(toolEntries, tc);
+              } else {
+                result = { toolCallId: tc.id, name: tc.name, content: "User rejected this tool call.", isError: true };
+              }
+            } else {
+              result = await executeTool(toolEntries, tc);
+            }
             send({ type: "tool_result", result });
             messages.push({
               id: crypto.randomUUID(),
