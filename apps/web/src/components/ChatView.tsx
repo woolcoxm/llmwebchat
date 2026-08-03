@@ -49,6 +49,15 @@ export function ChatView() {
         >
           ⌘K
         </button>
+        {activeId && (
+          <button
+            onClick={() => useStore.getState().exportMarkdown(activeId)}
+            className="px-2 py-1 rounded-md text-xs border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"
+            title="Export conversation as Markdown"
+          >
+            ⤓
+          </button>
+        )}
       </header>
 
       <div className="flex-1 overflow-y-auto">

@@ -47,6 +47,8 @@ interface AppState {
   /** Siblings (same parent) of a message, in creation order. */
   siblingsOf: (convId: string, msgId: string) => ChatMessage[];
   setActiveChild: (convId: string, parentId: string, childId: string) => void;
+  /** Download the active conversation (active path) as Markdown. */
+  exportMarkdown: (convId: string) => void;
 
   /* composer prefs */
   reasoningEffort: ReasoningEffort;
@@ -225,6 +227,23 @@ export const useStore = create<AppState>()(
         set((st) => ({
           activeChild: { ...st.activeChild, [convId]: { ...(st.activeChild[convId] ?? {}), [parentId]: childId } },
         }));
+      },
+      exportMarkdown(convId) {
+        const path = get().activePath(convId);
+        const conv = get().conversations.find((c) => c.id === convId);
+        const md = path
+          .map((m) => {
+            const head = m.role === "user" ? "## 🧑 You" : m.role === "assistant" ? `## 🤖 Assistant${m.model ? ` (${m.model})` : ""}` : `## ${m.role}`;
+            return `${head}\n\n${m.content || "_(empty)_"}${m.reasoning ? `\n\n<details><summary>Reasoning</summary>\n\n${m.reasoning}\n\n</details>` : ""}`;
+          })
+          .join("\n\n---\n\n");
+        const blob = new Blob([`# ${conv?.title ?? "Conversation"}\n\n${md}\n`], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${(conv?.title ?? "chat").replace(/[^a-z0-9-_]+/gi, "-").slice(0, 40)}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
       },
 
       reasoningEffort: "high",

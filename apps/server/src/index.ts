@@ -52,12 +52,15 @@ app.route("/api/chat", chat);
 
 // Production: serve built frontend (dev uses Vite separately on :5173).
 import { existsSync } from "node:fs";
-import { join } from "node:path";
-const WEB_DIST = join(process.cwd(), "web-dist");
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+const __dirname = dirname(fileURLToPath(import.meta.url));
+// apps/server/{dist|src} -> ../web-dist  (works regardless of process.cwd())
+const WEB_DIST = process.env["LLMWEBCHAT_WEB_DIST"] ?? join(__dirname, "..", "web-dist");
 if (existsSync(WEB_DIST)) {
   const { serveStatic } = await import("@hono/node-server/serve-static");
-  app.use("/*", serveStatic({ root: "./web-dist" }));
-  app.get("/*", serveStatic({ path: "./web-dist/index.html" }));
+  app.use("/*", serveStatic({ root: WEB_DIST }));
+  app.get("/*", serveStatic({ path: join(WEB_DIST, "index.html") }));
 }
 
 const port = Number(process.env["PORT"] ?? 8787);

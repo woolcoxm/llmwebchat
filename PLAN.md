@@ -38,48 +38,47 @@ The proxy holds secrets and executes tools, so hardening came first:
   - [x] conversation sidebar (new/select/delete/rename), persisted to localStorage
   - [x] composer: model/provider pickers, reasoning-effort selector, tools toggle, stop button
   - [x] settings modal: add/edit/remove providers, API keys (masked), active provider
-- [x] **Verified end-to-end** with real GLM-4.6: `start → reasoning → delta → finish` lifecycle confirmed.
+- [x] **Verified end-to-end** with a real OpenAI-compatible model: `start → reasoning → delta → finish` lifecycle confirmed; agentic tool loop (web_search) confirmed.
 
-### Known polish items (Phase 0.5)
-- [ ] System prompt from settings is not yet injected into the request
-- [ ] `LLMWEBCHAT_DATA_DIR` propagation check / docs
-- [ ] Code-split the vendor bundle (824 KB → split markdown/katex)
-- [ ] Empty-state suggestion buttons call `send()` without awaiting a created conv (minor race)
-- [ ] Add a real `pnpm dev` root script that boots both apps cleanly + prints URLs
+### Phase 0.5 polish (done)
+- [x] System prompt injected server-side when no system message present
+- [x] `LLMWEBCHAT_DATA_DIR` + `LLMWEBCHAT_HOST` + `LLMWEBCHAT_AUTH_TOKEN` env handling
+- [x] Root `pnpm dev` boots both apps; production SPA served from any cwd (fixed)
+- [ ] Code-split the vendor bundle (mermaid/pyodide already lazy; markdown/katex still in main chunk)
 
 ---
 
-## 🚧 Phase 1 — Power UX
-- [ ] **Conversation branching/forking** — `parentId` is already on every message; build the tree view + "branch from here" action + active-path walk
-- [ ] **Command palette** (⌘K) — switch chat, set model, toggle tools, jump to settings
-- [ ] **Keyboard shortcuts** — new chat, search, cycle model, branch, stop/regenerate
-- [ ] **Vim input mode** in the composer
-- [ ] Message actions: regenerate, edit-and-resubmit, copy, branch
-- [ ] Full-text **search** across conversations
+## ✅ Phase 1 — Power UX (mostly done)
+- [x] **Conversation branching/forking** — tree model (parentId + activeChild), active-path walk, regenerate, edit-and-resubmit, branch navigation (1/n prev/next)
+- [x] **Command palette** (⌘K) — fuzzy, arrow/enter nav, all key actions
+- [x] **Keyboard shortcuts** — ⌘K palette, ⌘B sidebar, ⌘J artifacts, ⌘, settings, ⌘N new, ⌘. stop
+- [x] Message actions: regenerate, edit-and-resubmit, copy, branch nav
+- [x] Full-text **search** across conversations (title + message content)
+- [ ] Vim input mode in the composer
 - [ ] Folders / pinning in sidebar
 
-## 🎨 Phase 2 — Artifacts & rendering
-- [ ] **Artifact side panel** — multi-tab live render: code / HTML / React / SVG / Mermaid
-- [ ] **Code interpreter** — Pyodide (Python) + WebContainers (Node) "Run" buttons, output capture
+## ✅ Phase 2 — Artifacts & rendering (core done)
+- [x] **Artifact side panel** — multi-tab: Source / live Preview / Run; HTML (sandboxed iframe) / SVG / Mermaid (lazy)
+- [x] **Code interpreter** — Pyodide (Python, WASM-sandboxed) lazy-loaded from CDN, stdout captured
 - [ ] Inline charts (Recharts), data tables, generative-UI cards
-- [ ] File & image **upload** (multimodal) — wire `Attachment` → provider image_url parts
-- [ ] Streaming artifact detection (model emits fenced block → opens panel)
+- [ ] File & image upload (multimodal) — wire `Attachment` → provider image_url parts
+- [ ] Streaming auto-open of artifact panel on fenced blocks
 
-## 🔌 Phase 3 — Agentic layer
-- [ ] Built-in tools: `web_search`, `web_reader`, `read_file`, `write_file`, `run_bash` (sandboxed)
-- [ ] **MCP client** — connect MCP servers (filesystem, browser, z.ai search/reader/vision MCP)
-- [ ] z.ai native tools wired as MCP-style tools (web-search, image-gen, OCR endpoints)
-- [ ] **RAG / project knowledge** — embed docs, hybrid search (BM25 + vector) + rerank, `#`-inject
-- [ ] Tool-call execution visualisation + human-in-the-loop approvals
-- [ ] Browser agent (Playwright) — optional, high-power
+## 🔌 Phase 3 — Agentic layer (tools done; MCP/RAG pending)
+- [x] Built-in tools: `web_search`, `web_reader`, `read_file`, `write_file`, `run_bash` — sandboxed + settings-gated
+- [x] Tool-call/result rendering in the message stream; tools config UI in Settings
+- [ ] **MCP client** — connect MCP servers (filesystem, browser, etc.)
+- [ ] **RAG / project knowledge** — embed docs, hybrid search + rerank, `#`-inject
+- [ ] Human-in-the-loop approvals for destructive tools
+- [ ] Browser agent (Playwright) — optional
 
-## 🌟 Phase 4 — Differentiators
-- [ ] **Multi-model arena** — n models answer side-by-side, A/B vote, export winner
-- [ ] **Conversation-tree graph** view + branch diffing/merging
-- [ ] **Voice mode** — STT (Whisper.cpp / z.ai GLM-ASR) + TTS streaming, push-to-talk
-- [ ] **Prompt/agent library** — templates with variables, shareable presets
-- [ ] Theming system (import/export), **PWA** install + offline
-- [ ] **Tauri** desktop wrapper (resurrect decision #3)
+## 🌟 Phase 4 — Differentiators (partial)
+- [ ] **Multi-model arena** — n models side-by-side, A/B vote
+- [ ] Conversation-tree graph view + branch diffing
+- [ ] Voice mode (STT/TTS)
+- [ ] Prompt/agent library
+- [x] Command palette + global shortcuts (moved from Phase 1)
+- [ ] Theming system, PWA install + offline, Tauri desktop
 
 ## 👥 Phase 5 — Multi-user (optional, later)
 - [ ] Auth (Better-Auth/Lucia), backend-backed conversation storage & sync
