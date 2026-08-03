@@ -21,6 +21,7 @@ import { models } from "./routes/models.js";
 import { settingsRouter } from "./routes/settings.js";
 import { toolsRouter } from "./routes/tools.js";
 import { mcpRouter } from "./routes/mcp.js";
+import { kbRouter } from "./routes/kb.js";
 import {
   authGate,
   bodySizeLimit,
@@ -47,6 +48,7 @@ app.get("/api/health", (c) =>
 app.route("/api/settings", settingsRouter);
 app.route("/api/tools", toolsRouter);
 app.route("/api/mcp", mcpRouter);
+app.route("/api/kb", kbRouter);
 app.route("/api/models", models);
 // Rate-limit the (expensive, tool-capable) chat endpoint.
 app.use("/api/chat/*", rateLimit({ windowMs: 60_000, max: 120 }));

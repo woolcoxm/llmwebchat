@@ -23,6 +23,28 @@ export async function listModels(providerId: string): Promise<ModelInfo[]> {
   return (json.models ?? []) as ModelInfo[];
 }
 
+export interface KbItem {
+  id: string;
+  source: string;
+  text: string;
+  createdAt: number;
+}
+export async function listKb(): Promise<KbItem[]> {
+  const r = await fetch("/api/kb");
+  return (await r.json()).items ?? [];
+}
+export async function ingestKb(text: string, source?: string) {
+  const r = await fetch("/api/kb/ingest", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, source }),
+  });
+  return r.json();
+}
+export async function deleteKbItem(id: string) {
+  await fetch(`/api/kb/${id}`, { method: "DELETE" });
+}
+
 /**
  * Stream a chat completion. Calls onEvent for each NDJSON ChatEvent.
  * Returns an AbortController so the UI can cancel.

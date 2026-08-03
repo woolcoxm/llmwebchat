@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { McpServerConfig, ProviderConfig, Settings, ToolsConfig } from "@llmwebchat/shared";
+import { deleteKbItem, ingestKb, listKb } from "../lib/api.js";
 import { useStore } from "../store.js";
 
 const MASKED = "••••••••";
@@ -259,6 +260,8 @@ export function SettingsModal() {
               )}
             </div>
           </section>
+
+          <KnowledgeBaseSection embeddingModel={draft.tools?.embeddingModel ?? "nomic-embed-text"} onModel={(m) => patchTools({ embeddingModel: m })} />
         </div>
 
         <div className="sticky bottom-0 flex justify-end gap-2 px-5 py-4 border-t border-[var(--color-border)] bg-[var(--color-bg)]">
@@ -345,5 +348,78 @@ function McpRow({
         className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]"
       />
     </div>
+  );
+}
+
+function KnowledgeBaseSection({
+  embeddingModel,
+  onModel,
+}: {
+  embeddingModel: string;
+  onModel: (m: string) => void;
+}) {
+  const [items, setItems] = useState<Awaited<ReturnType<typeof listKb>>>([]);
+  const [text, setText] = useState("");
+  const [source, setSource] = useState("");
+  const [status, setStatus] = useState<string>("");
+  const [busy, setBusy] = useState(false);
+  const refresh = () => listKb().then(setItems).catch(() => {});
+  useEffect(() => {
+    refresh();
+  }, []);
+  const ingest = async () => {
+    if (!text.trim()) return;
+    setBusy(true);
+    setStatus("embedding…");
+    const r = await ingestKb(text, source || undefined);
+    setBusy(false);
+    if (r.error) setStatus(`⚠️ ${r.error}`);
+    else { setStatus(`✓ ingested ${r.ingested} chunk(s) via ${r.model}`); setText(""); setSource(""); refresh(); }
+  };
+  return (
+    <section>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-xs uppercase tracking-wide text-[var(--color-muted)]">Knowledge base (RAG)</h3>
+        <input
+          value={embeddingModel}
+          onChange={(e) => onModel(e.target.value)}
+          placeholder="embedding model"
+          className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-[11px] w-40 outline-none focus:border-[var(--color-accent)]"
+        />
+      </div>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={3}
+        placeholder="Paste document text to ingest (chunked + embedded, then retrievable via the knowledge_search tool)…"
+        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)]"
+      />
+      <div className="flex items-center gap-2 mt-1">
+        <input
+          value={source}
+          onChange={(e) => setSource(e.target.value)}
+          placeholder="source label (optional)"
+          className="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]"
+        />
+        <button
+          onClick={ingest}
+          disabled={busy || !text.trim()}
+          className="px-3 py-1 rounded text-xs bg-[var(--color-accent)] text-white disabled:opacity-30"
+        >
+          {busy ? "…" : "Ingest"}
+        </button>
+        <button onClick={refresh} className="text-xs text-[var(--color-muted)] hover:text-[var(--color-fg)]">refresh</button>
+      </div>
+      {status && <p className="text-[11px] text-[var(--color-muted)] mt-1">{status}</p>}
+      <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+        {items.map((it) => (
+          <div key={it.id} className="flex items-center gap-2 text-[11px] text-[var(--color-muted)]">
+            <span className="truncate flex-1">📄 {it.source}</span>
+            <button onClick={() => { deleteKbItem(it.id).then(refresh); }} className="hover:text-red-400">✕</button>
+          </div>
+        ))}
+        {items.length === 0 && <p className="text-[11px] text-[var(--color-muted)]">Empty — ingest text above (needs the embedding model on a provider).</p>}
+      </div>
+    </section>
   );
 }

@@ -162,6 +162,10 @@ export interface ToolsConfig {
   allowBash?: boolean;
   /** MCP servers to connect (stdio). Each exposes its tools to the model. */
   mcpServers?: McpServerConfig[];
+  /** Embedding provider for the knowledge base (default: ollama). */
+  embeddingProviderId?: string;
+  /** Embedding model (default: nomic-embed-text). */
+  embeddingModel?: string;
 }
 
 export interface Settings {

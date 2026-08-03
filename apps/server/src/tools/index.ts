@@ -18,6 +18,7 @@ import {
 } from "./files.js";
 import { runBashDef, makeRunBash } from "./bash.js";
 import { webReaderDef, webSearchDef, webReader, webSearch } from "./web.js";
+import { knowledgeSearchDef, makeKnowledgeSearch } from "./kb.js";
 import { mcpClients } from "../mcp/registry.js";
 
 type Runner = (args: unknown) => Promise<string>;
@@ -66,6 +67,17 @@ export function buildTools(settings: Settings): ToolEntry[] {
       destructive: true,
     },
   ];
+
+  // knowledge_search — only when an embedding provider exists
+  const embedProviderId = t.embeddingProviderId ?? settings.providers.find((p) => p.id === "ollama")?.id ?? settings.activeProviderId;
+  const embedProvider = settings.providers.find((p) => p.id === embedProviderId);
+  if (embedProvider) {
+    entries.push({
+      def: knowledgeSearchDef,
+      run: makeKnowledgeSearch(embedProvider, t.embeddingModel ?? "nomic-embed-text") as Runner,
+      enabled: true,
+    });
+  }
 
   // MCP server tools (only when configured + connected). Names are prefixed
   // `<server>__<tool>`; we strip the prefix back off when invoking the server.
