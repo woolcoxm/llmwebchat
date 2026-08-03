@@ -59,6 +59,7 @@ interface AppState {
   selectConversation: (id: string) => void;
   deleteConversation: (id: string) => void;
   renameConversation: (id: string, title: string) => void;
+  togglePin: (id: string) => void;
   addMessage: (convId: string, msg: ChatMessage) => void;
   patchMessage: (convId: string, msgId: string, patch: Partial<ChatMessage>) => void;
   /** Walk root → active tip for a conversation. */
@@ -253,6 +254,9 @@ export const useStore = create<AppState>()(
         set((st) => ({
           conversations: st.conversations.map((c) => (c.id === id ? { ...c, title, updatedAt: Date.now() } : c)),
         }));
+      },
+      togglePin(id) {
+        set((st) => ({ conversations: st.conversations.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)) }));
       },
       addMessage(convId, msg) {
         set((st) => ({

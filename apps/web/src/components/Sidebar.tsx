@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useStore } from "../store.js";
 import { ThemePicker } from "./ThemePicker.js";
+import type { Conversation } from "@llmwebchat/shared";
 
 export function Sidebar() {
   const open = useStore((s) => s.sidebarOpen);
@@ -9,6 +10,7 @@ export function Sidebar() {
   const activeId = useStore((s) => s.activeId);
   const select = useStore((s) => s.selectConversation);
   const del = useStore((s) => s.deleteConversation);
+  const togglePin = useStore((s) => s.togglePin);
   const newConv = useStore((s) => s.newConversation);
   const setSettingsOpen = useStore((s) => s.setSettingsOpen);
   const settings = useStore((s) => s.settings);
@@ -22,6 +24,8 @@ export function Sidebar() {
         return msgs.some((m) => (m.content ?? "").toLowerCase().includes(q));
       })
     : conversations;
+  const pinned = filtered.filter((c) => c.pinned);
+  const rest = filtered.filter((c) => !c.pinned);
 
   if (!open) return null;
 
@@ -55,28 +59,17 @@ export function Sidebar() {
             {q ? "No matches" : "No conversations yet"}
           </div>
         )}
-        {filtered.map((c) => (
-          <div
-            key={c.id}
-            onClick={() => select(c.id)}
-            className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm ${
-              c.id === activeId
-                ? "bg-[var(--color-surface-2)] text-[var(--color-fg)]"
-                : "text-[var(--color-muted)] hover:bg-[var(--color-surface-2)]/50"
-            }`}
-          >
-            <span className="flex-1 truncate">{c.title}</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                del(c.id);
-              }}
-              className="opacity-0 group-hover:opacity-100 text-[var(--color-muted)] hover:text-red-400"
-              title="Delete"
-            >
-              ✕
-            </button>
-          </div>
+        {pinned.length > 0 && (
+          <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] px-1 pt-1 pb-0.5">Pinned</div>
+        )}
+        {pinned.map((c) => (
+          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} />
+        ))}
+        {pinned.length > 0 && rest.length > 0 && (
+          <div className="text-[10px] uppercase tracking-wide text-[var(--color-muted)] px-1 pt-2 pb-0.5">Recent</div>
+        )}
+        {rest.map((c) => (
+          <ConvRow key={c.id} c={c} activeId={activeId} select={select} del={del} togglePin={togglePin} />
         ))}
       </div>
 
@@ -98,5 +91,47 @@ export function Sidebar() {
         <ThemePicker />
       </div>
     </aside>
+  );
+}
+
+function ConvRow({
+  c,
+  activeId,
+  select,
+  del,
+  togglePin,
+}: {
+  c: Conversation;
+  activeId: string | null;
+  select: (id: string) => void;
+  del: (id: string) => void;
+  togglePin: (id: string) => void;
+}) {
+  return (
+    <div
+      onClick={() => select(c.id)}
+      className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm ${
+        c.id === activeId
+          ? "bg-[var(--color-surface-2)] text-[var(--color-fg)]"
+          : "text-[var(--color-muted)] hover:bg-[var(--color-surface-2)]/50"
+      }`}
+    >
+      {c.pinned && <span className="text-[var(--color-accent-fg)] text-xs">📌</span>}
+      <span className="flex-1 truncate">{c.title}</span>
+      <button
+        onClick={(e) => { e.stopPropagation(); togglePin(c.id); }}
+        className="opacity-0 group-hover:opacity-100 text-[var(--color-muted)] hover:text-[var(--color-accent-fg)]"
+        title={c.pinned ? "Unpin" : "Pin"}
+      >
+        {c.pinned ? "🏴" : "📍"}
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); del(c.id); }}
+        className="opacity-0 group-hover:opacity-100 text-[var(--color-muted)] hover:text-red-400"
+        title="Delete"
+      >
+        ✕
+      </button>
+    </div>
   );
 }

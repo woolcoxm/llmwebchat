@@ -126,7 +126,9 @@ export interface Conversation {
   model?: string;
   createdAt: number;
   updatedAt: number;
-  /** Arbitrary metadata (tags, pinned, folder, etc.) */
+  /** Pinned to the top of the sidebar. */
+  pinned?: boolean;
+  /** Arbitrary metadata (tags, folder, etc.) */
   meta?: Record<string, unknown>;
 }
 
