@@ -19,6 +19,7 @@ import {
 import { runBashDef, makeRunBash } from "./bash.js";
 import { webReaderDef, webSearchDef, webReader, webSearch } from "./web.js";
 import { knowledgeSearchDef, makeKnowledgeSearch } from "./kb.js";
+import { customToolDef, makeCustomRunner } from "./custom.js";
 import { mcpClients } from "../mcp/registry.js";
 
 type Runner = (args: unknown) => Promise<string>;
@@ -67,6 +68,14 @@ export function buildTools(settings: Settings): ToolEntry[] {
       destructive: true,
     },
   ];
+
+  // Custom HTTP webhook tools
+  if (t.customTools?.length) {
+    for (const ct of t.customTools) {
+      if (!ct.name || !ct.url) continue;
+      entries.push({ def: customToolDef(ct), run: makeCustomRunner(ct) as Runner, enabled: true });
+    }
+  }
 
   // knowledge_search — only when an embedding provider exists
   const embedProviderId = t.embeddingProviderId ?? settings.providers.find((p) => p.id === "ollama")?.id ?? settings.activeProviderId;

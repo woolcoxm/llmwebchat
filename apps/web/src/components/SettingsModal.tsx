@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { McpServerConfig, ProviderConfig, Settings, ToolsConfig } from "@llmwebchat/shared";
+import type { CustomTool, McpServerConfig, ProviderConfig, Settings, ToolsConfig } from "@llmwebchat/shared";
 import { deleteKbItem, ingestKb, listKb } from "../lib/api.js";
 import { useStore } from "../store.js";
 
@@ -282,6 +282,57 @@ export function SettingsModal() {
             </div>
           </section>
 
+          <section>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs uppercase tracking-wide text-[var(--color-muted)]">Custom HTTP tools</h3>
+              <button
+                onClick={() =>
+                  setDraft({
+                    ...draft,
+                    tools: {
+                      ...draft.tools,
+                      customTools: [
+                        ...(draft.tools?.customTools ?? []),
+                        { name: "tool-" + (draft.tools?.customTools?.length ?? 0), description: "", url: "https://", method: "POST" },
+                      ],
+                    },
+                  })
+                }
+                className="text-xs px-2 py-1 rounded border border-[var(--color-border)] hover:border-[var(--color-accent)]/50"
+              >
+                + Tool
+              </button>
+            </div>
+            <div className="space-y-2">
+              {(draft.tools?.customTools ?? []).map((ct, i) => (
+                <CustomToolRow
+                  key={i}
+                  tool={ct}
+                  onChange={(nt) =>
+                    setDraft({
+                      ...draft,
+                      tools: {
+                        ...draft.tools,
+                        customTools: (draft.tools?.customTools ?? []).map((x, j) => (j === i ? nt : x)),
+                      },
+                    })
+                  }
+                  onRemove={() =>
+                    setDraft({
+                      ...draft,
+                      tools: { ...draft.tools, customTools: (draft.tools?.customTools ?? []).filter((_, j) => j !== i) },
+                    })
+                  }
+                />
+              ))}
+              {(draft.tools?.customTools?.length ?? 0) === 0 && (
+                <p className="text-[11px] text-[var(--color-muted)]">
+                  Wire any HTTP endpoint as a model-callable tool. The model's arguments are POSTed as JSON <code>{`{arguments}`}</code>.
+                </p>
+              )}
+            </div>
+          </section>
+
           <KnowledgeBaseSection embeddingModel={draft.tools?.embeddingModel ?? "nomic-embed-text"} onModel={(m) => patchTools({ embeddingModel: m })} />
 
           <section>
@@ -389,6 +440,35 @@ function McpRow({
         placeholder="args (space-separated)"
         className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]"
       />
+    </div>
+  );
+}
+
+function CustomToolRow({
+  tool,
+  onChange,
+  onRemove,
+}: {
+  tool: CustomTool;
+  onChange: (t: CustomTool) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-[var(--color-border)] p-2 space-y-1.5">
+      <div className="flex gap-2">
+        <input value={tool.name} onChange={(e) => onChange({ ...tool, name: e.target.value })} placeholder="name" className="flex-1 bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]" />
+        <select value={tool.method ?? "POST"} onChange={(e) => onChange({ ...tool, method: e.target.value as "POST" | "GET" })} className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-1 py-1 text-xs">
+          <option>POST</option>
+          <option>GET</option>
+        </select>
+        <button onClick={onRemove} className="text-[11px] text-red-400/70 hover:text-red-400 px-1">remove</button>
+      </div>
+      <input value={tool.url} onChange={(e) => onChange({ ...tool, url: e.target.value })} placeholder="https://endpoint" className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]" />
+      <input value={tool.description} onChange={(e) => onChange({ ...tool, description: e.target.value })} placeholder="description (what the model should use it for)" className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded px-2 py-1 text-xs outline-none focus:border-[var(--color-accent)]" />
+      <label className="flex items-center gap-1.5 text-[11px] text-[var(--color-muted)]">
+        <input type="checkbox" checked={tool.allowPrivate === true} onChange={(e) => onChange({ ...tool, allowPrivate: e.target.checked })} className="accent-[var(--color-accent)]" />
+        allow private/localhost targets (SSRF risk — only for trusted local endpoints)
+      </label>
     </div>
   );
 }

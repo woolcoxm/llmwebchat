@@ -161,6 +161,16 @@ export interface McpServerConfig {
   cwd?: string;
 }
 
+export interface CustomTool {
+  name: string;
+  description: string;
+  url: string;
+  method?: "POST" | "GET";
+  headers?: Record<string, string>;
+  /** Allow private/localhost targets (off by default for SSRF safety). */
+  allowPrivate?: boolean;
+}
+
 export interface ToolsConfig {
   /** Absolute path used as the sandbox root for file/bash tools. */
   workspaceRoot?: string;
@@ -176,6 +186,8 @@ export interface ToolsConfig {
   toolApproval?: "never" | "destructive";
   /** MCP servers to connect (stdio). Each exposes its tools to the model. */
   mcpServers?: McpServerConfig[];
+  /** User-defined HTTP webhook tools (called by the model via function calling). */
+  customTools?: CustomTool[];
   /** Embedding provider for the knowledge base (default: ollama). */
   embeddingProviderId?: string;
   /** Embedding model (default: nomic-embed-text). */
