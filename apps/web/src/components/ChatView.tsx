@@ -52,6 +52,13 @@ export function ChatView() {
           🌳
         </button>
         <button
+          onClick={() => useStore.getState().setCompareOpen(true)}
+          className="px-2 py-1 rounded-md text-xs border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"
+          title="Compare two branches (diff)"
+        >
+          ⇄
+        </button>
+        <button
           onClick={() => setArtifactOpen(!artifactOpen)}
           className={`ml-auto px-2 py-1 rounded-md text-xs border ${artifactOpen ? "border-[var(--color-accent)]/50 text-[var(--color-accent-fg)] bg-[var(--color-accent)]/10" : "border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"}`}
           title="Toggle Artifacts panel (⌘J)"

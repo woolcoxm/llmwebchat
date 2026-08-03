@@ -115,6 +115,8 @@ interface AppState {
   setTreeOpen: (b: boolean) => void;
   convSettingsOpen: boolean;
   setConvSettingsOpen: (b: boolean) => void;
+  compareOpen: boolean;
+  setCompareOpen: (b: boolean) => void;
   /** Make `msgId` the active tip by repointing activeChild along its path from root. */
   activatePathTo: (convId: string, msgId: string) => void;
 
@@ -591,6 +593,10 @@ export const useStore = create<AppState>()(
       convSettingsOpen: false,
       setConvSettingsOpen(b) {
         set({ convSettingsOpen: b });
+      },
+      compareOpen: false,
+      setCompareOpen(b) {
+        set({ compareOpen: b });
       },
       activatePathTo(convId, msgId) {
         const msgs = get().messagesByConv[convId] ?? [];

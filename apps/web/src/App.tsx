@@ -8,6 +8,7 @@ import { Arena } from "./components/Arena.js";
 import { Snippets } from "./components/Snippets.js";
 import { TreeView } from "./components/TreeView.js";
 import { ConvSettings } from "./components/ConvSettings.js";
+import { BranchCompare } from "./components/BranchCompare.js";
 import { useStore } from "./store.js";
 
 export default function App() {
@@ -63,6 +64,7 @@ export default function App() {
       <Snippets />
       <TreeView />
       <ConvSettings />
+      <BranchCompare />
     </div>
   );
 }
