@@ -63,6 +63,16 @@ export async function useLocalAgentForAgent(providerId: string, modelId?: string
   return r.json();
 }
 
+export interface FsEntry { name: string; dir: boolean; size: number }
+export async function listFiles(path = ""): Promise<{ cwd: string; path: string; entries: FsEntry[]; error?: string }> {
+  const r = await fetch(`/api/workspace/files?path=${encodeURIComponent(path)}`);
+  return r.json();
+}
+export async function readFile(path: string): Promise<{ path: string; name: string; content: string; error?: string }> {
+  const r = await fetch(`/api/workspace/file?path=${encodeURIComponent(path)}`);
+  return r.json();
+}
+
 /** Stream a prompt through the pi agent backend (same ChatEvent wire format). */
 export function streamAgent(
   req: { sessionId: string; message: string; images?: Array<{ data: string; mimeType: string }> },

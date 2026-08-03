@@ -135,6 +135,8 @@ interface AppState {
   setCompareOpen: (b: boolean) => void;
   helpOpen: boolean;
   setHelpOpen: (b: boolean) => void;
+  workspaceOpen: boolean;
+  setWorkspaceOpen: (b: boolean) => void;
   /** Make `msgId` the active tip by repointing activeChild along its path from root. */
   activatePathTo: (convId: string, msgId: string) => void;
 
@@ -771,6 +773,10 @@ export const useStore = create<AppState>()(
       helpOpen: false,
       setHelpOpen(b) {
         set({ helpOpen: b });
+      },
+      workspaceOpen: false,
+      setWorkspaceOpen(b) {
+        set({ workspaceOpen: b });
       },
       activatePathTo(convId, msgId) {
         const msgs = get().messagesByConv[convId] ?? [];

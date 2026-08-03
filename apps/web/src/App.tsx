@@ -10,6 +10,7 @@ import { TreeView } from "./components/TreeView.js";
 import { ConvSettings } from "./components/ConvSettings.js";
 import { BranchCompare } from "./components/BranchCompare.js";
 import { ShortcutsHelp } from "./components/ShortcutsHelp.js";
+import { Workspace } from "./components/Workspace.js";
 import { useStore } from "./store.js";
 
 export default function App() {
@@ -60,6 +61,7 @@ export default function App() {
       <Sidebar />
       <ChatView />
       <ArtifactPanel />
+      <Workspace />
       <SettingsModal />
       <CommandPalette />
       <Arena />

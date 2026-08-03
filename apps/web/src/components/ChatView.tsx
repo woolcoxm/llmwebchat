@@ -18,6 +18,9 @@ export function ChatView() {
   const setArtifactOpen = useStore((s) => s.setArtifactOpen);
   const setArenaOpen = useStore((s) => s.setArenaOpen);
   const setConvSettingsOpen = useStore((s) => s.setConvSettingsOpen);
+  const setWorkspaceOpen = useStore((s) => s.setWorkspaceOpen);
+  const workspaceOpen = useStore((s) => s.workspaceOpen);
+  const agentCwd = useStore((s) => s.settings?.agent?.cwd);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,6 +64,15 @@ export function ChatView() {
         <div className="text-sm text-[var(--color-muted)] truncate">
           {activeProvider?.name} · {settings?.activeModel}
         </div>
+        {agentCwd && (
+          <button
+            onClick={() => setWorkspaceOpen(!workspaceOpen)}
+            className={`px-2 py-1 rounded-md text-xs border ${workspaceOpen ? "btn-primary border-transparent" : "glass text-[var(--color-muted)] hover:text-[var(--color-fg)]"}`}
+            title="Browse the agent's project"
+          >
+            📁
+          </button>
+        )}
         <button
           onClick={() => setConvSettingsOpen(true)}
           className="px-2 py-1 rounded-md text-xs border border-[var(--color-border)] text-[var(--color-muted)] hover:text-[var(--color-fg)]"
