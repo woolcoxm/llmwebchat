@@ -271,6 +271,27 @@ export function SettingsModal() {
           </section>
 
           <KnowledgeBaseSection embeddingModel={draft.tools?.embeddingModel ?? "nomic-embed-text"} onModel={(m) => patchTools({ embeddingModel: m })} />
+
+          <section>
+            <h3 className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">Backup</h3>
+            <div className="flex gap-2">
+              <button onClick={() => useStore.getState().exportJSON()} className="flex-1 px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm hover:border-[var(--color-accent)]/50">⤓ Export all (JSON)</button>
+              <label className="flex-1 px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-center cursor-pointer hover:border-[var(--color-accent)]/50">
+                ⤒ Import (JSON)
+                <input type="file" accept="application/json,.json" className="hidden" onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (!f) return;
+                  const r = new FileReader();
+                  r.onload = () => {
+                    try { const ok = useStore.getState().importJSON(JSON.parse(String(r.result))); alert(ok ? "Imported." : "Invalid backup file."); }
+                    catch { alert("Invalid backup file."); }
+                  };
+                  r.readAsText(f);
+                  e.target.value = "";
+                }} />
+              </label>
+            </div>
+          </section>
         </div>
 
         <div className="sticky bottom-0 flex justify-end gap-2 px-5 py-4 border-t border-[var(--color-border)] bg-[var(--color-bg)]">

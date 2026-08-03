@@ -65,6 +65,10 @@ interface AppState {
   forkConversation: (convId: string) => string | null;
   /** Auto-generate a short title for a conversation via the model. */
   autoTitle: (convId: string) => Promise<void>;
+  /** Download all conversations + trees as a JSON backup. */
+  exportJSON: () => void;
+  /** Merge a JSON backup into the store. */
+  importJSON: (data: unknown) => boolean;
   addMessage: (convId: string, msg: ChatMessage) => void;
   patchMessage: (convId: string, msgId: string, patch: Partial<ChatMessage>) => void;
   /** Walk root → active tip for a conversation. */
@@ -340,6 +344,42 @@ export const useStore = create<AppState>()(
           },
         );
         void controller;
+      },
+      exportJSON() {
+        const st = get();
+        const data = {
+          app: "llmwebchat",
+          version: 1,
+          exportedAt: Date.now(),
+          conversations: st.conversations,
+          messagesByConv: st.messagesByConv,
+          activeChild: st.activeChild,
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `llmwebchat-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      importJSON(data) {
+        const d = data as { app?: string; conversations?: Conversation[]; messagesByConv?: Record<string, ChatMessage[]>; activeChild?: Record<string, Record<string, string>> };
+        if (!d || d.app !== "llmwebchat" || !Array.isArray(d.conversations) || !d.messagesByConv) return false;
+        const existing = new Set(get().conversations.map((c) => c.id));
+        const convs = (d.conversations).filter((c) => !existing.has(c.id));
+        const newMsgs: Record<string, ChatMessage[]> = {};
+        const newChild: Record<string, Record<string, string>> = {};
+        for (const c of convs) {
+          newMsgs[c.id] = d.messagesByConv[c.id] ?? [];
+          newChild[c.id] = d.activeChild?.[c.id] ?? {};
+        }
+        set((st) => ({
+          conversations: [...convs, ...st.conversations],
+          messagesByConv: { ...st.messagesByConv, ...newMsgs },
+          activeChild: { ...st.activeChild, ...newChild },
+        }));
+        return true;
       },
       addMessage(convId, msg) {
         set((st) => ({
