@@ -133,6 +133,18 @@ export function SettingsModal() {
           </section>
 
           <section>
+            <h3 className="text-xs uppercase tracking-wide text-[var(--color-muted)] mb-2">Memory (global)</h3>
+            <textarea
+              value={(draft.memory ?? []).join("\n")}
+              onChange={(e) => setDraft({ ...draft, memory: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })}
+              rows={4}
+              placeholder={"One fact per line — injected into every chat's system context.\ne.g. Prefers concise answers\n     Works in TypeScript / React"}
+              className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm outline-none focus:border-[var(--color-accent)]"
+            />
+            <p className="text-[11px] text-[var(--color-muted)] mt-1">Recalled across all conversations (unless a chat sets its own system prompt).</p>
+          </section>
+
+          <section>
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-xs uppercase tracking-wide text-[var(--color-muted)]">
                 Providers

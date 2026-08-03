@@ -53,17 +53,16 @@ chat.post("/", async (c) => {
   // ---- Build working message list (inject default system prompt) -------
   const messages: ChatMessage[] = body.messages.map((m) => ({ ...m }));
   const hasSystem = messages[0]?.role === "system";
+  const memory = (settings.memory ?? []).filter((m) => m && m.trim());
+  const memoryBlock = memory.length
+    ? `About the user (long-term memory — apply where relevant):\n${memory.map((m) => `- ${m}`).join("\n")}`
+    : "";
   if (
     !hasSystem &&
-    settings.defaultSystemPrompt &&
-    settings.defaultSystemPrompt.trim().length > 0
+    ((settings.defaultSystemPrompt && settings.defaultSystemPrompt.trim().length > 0) || memoryBlock)
   ) {
-    messages.unshift({
-      id: "system-prompt",
-      role: "system",
-      content: settings.defaultSystemPrompt,
-      createdAt: 0,
-    });
+    const parts = [memoryBlock, settings.defaultSystemPrompt].filter((s) => s && s.trim()).join("\n\n");
+    messages.unshift({ id: "system-prompt", role: "system", content: parts, createdAt: 0 });
   }
 
   const stream = new ReadableStream<Uint8Array>({

@@ -193,6 +193,8 @@ export interface Settings {
   defaultReasoningEffort: ReasoningEffort;
   /** System prompt prepended to every chat if conversation has none. */
   defaultSystemPrompt?: string;
+  /** Global user memory — facts injected into every chat's system context. */
+  memory?: string[];
   /** Temperature. */
   temperature?: number;
   /** Theme preference. */
