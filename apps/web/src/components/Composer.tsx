@@ -5,6 +5,12 @@ import type { Attachment } from "@llmwebchat/shared";
 import { nanoid } from "nanoid";
 import { recognitionSupported, startDictation, type Dictation } from "../lib/speech.js";
 
+const TEXT_EXT = new Set([
+  "txt", "md", "markdown", "json", "csv", "tsv", "yaml", "yml", "js", "mjs", "cjs",
+  "jsx", "ts", "tsx", "py", "rb", "go", "rs", "java", "c", "cpp", "h", "hpp", "cs",
+  "php", "sh", "bash", "zsh", "sql", "html", "htm", "css", "scss", "xml", "toml", "ini", "log", "env",
+]);
+
 const REASONING_LEVELS = ["none", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
 
 export function Composer() {
@@ -69,16 +75,27 @@ export function Composer() {
   const onFiles = (files: FileList | null) => {
     if (!files) return;
     Array.from(files).forEach((file) => {
-      if (!file.type.startsWith("image/")) return;
-      if (file.size > 8 * 1024 * 1024) return; // 8MB cap per image
-      const reader = new FileReader();
-      reader.onload = () => {
-        setAttachments((a) => [
-          ...a,
-          { id: nanoid(), type: file.type, name: file.name, url: reader.result as string },
-        ]);
-      };
-      reader.readAsDataURL(file);
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+      const isImage = file.type.startsWith("image/");
+      const isText =
+        file.type.startsWith("text/") ||
+        file.type === "application/json" ||
+        TEXT_EXT.has(ext);
+      if (isImage) {
+        if (file.size > 8 * 1024 * 1024) return;
+        const reader = new FileReader();
+        reader.onload = () =>
+          setAttachments((a) => [...a, { id: nanoid(), type: file.type, name: file.name, url: reader.result as string }]);
+        reader.readAsDataURL(file);
+      } else if (isText && file.size < 200_000) {
+        const reader = new FileReader();
+        reader.onload = () =>
+          setAttachments((a) => [
+            ...a,
+            { id: nanoid(), type: file.type || "text/plain", name: file.name, text: String(reader.result).slice(0, 100_000) },
+          ]);
+        reader.readAsText(file);
+      }
     });
   };
 
@@ -117,7 +134,13 @@ export function Composer() {
             <div className="flex flex-wrap gap-2 p-2 pb-0">
               {attachments.map((a) => (
                 <div key={a.id} className="relative group">
-                  <img src={a.url} alt={a.name} className="h-16 w-16 object-cover rounded-md border border-[var(--color-border)]" />
+                  {a.url ? (
+                    <img src={a.url} alt={a.name} className="h-16 w-16 object-cover rounded-md border border-[var(--color-border)]" />
+                  ) : (
+                    <div className="h-16 min-w-[64px] max-w-[140px] px-2 grid place-items-center text-center text-[10px] text-[var(--color-muted)] rounded-md border border-[var(--color-border)] bg-[var(--color-surface-2)]" title={a.name}>
+                      📄<div className="truncate w-full">{a.name}</div>
+                    </div>
+                  )}
                   <button
                     onClick={() => setAttachments((arr) => arr.filter((x) => x.id !== a.id))}
                     className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-[var(--color-surface-2)] border border-[var(--color-border)] text-xs grid place-items-center opacity-0 group-hover:opacity-100"
@@ -131,7 +154,7 @@ export function Composer() {
           <input
             ref={fileRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.txt,.md,.markdown,.json,.csv,.tsv,.yaml,.yml,.js,.mjs,.cjs,.jsx,.ts,.tsx,.py,.rb,.go,.rs,.java,.c,.cpp,.h,.hpp,.cs,.php,.sh,.bash,.zsh,.sql,.html,.htm,.css,.scss,.xml,.toml,.ini,.log,.env"
             multiple
             className="hidden"
             onChange={(e) => { onFiles(e.target.files); e.target.value = ""; }}

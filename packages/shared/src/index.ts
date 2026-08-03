@@ -71,6 +71,8 @@ export interface Attachment {
   url?: string;
   /** Server-side file id (returned by POST /api/files) */
   fileId?: string;
+  /** Extracted text for document attachments (folded into message context). */
+  text?: string;
 }
 
 export interface ToolCall {

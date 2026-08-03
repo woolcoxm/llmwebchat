@@ -340,6 +340,18 @@ export const useStore = create<AppState>()(
           get().renameConversation(convId, text.slice(0, 48));
         }
 
+        // Compose wire context: fold document text into content; images stay as attachments.
+        const docs = (attachments ?? []).filter((a) => a.text);
+        const docBlock = docs.length
+          ? docs.map((a) => `--- ${a.name} ---\n\`\`\`\n${a.text}\n\`\`\``).join("\n\n")
+          : "";
+        const imageAttachments = (attachments ?? []).filter((a) => a.url);
+        const wireUserMsg: ChatMessage = {
+          ...userMsg,
+          content: docBlock ? `${text}\n\n${docBlock}` : text,
+          attachments: imageAttachments.length ? imageAttachments : undefined,
+        };
+
         const assistantId = nanoid();
         get().addMessage(convId, {
           id: assistantId,
@@ -351,7 +363,7 @@ export const useStore = create<AppState>()(
         });
         get().setActiveChild(convId, userMsg.id, assistantId);
 
-        runStream(convId, [...path, userMsg], userMsg, assistantId, set, get);
+        runStream(convId, [...path, wireUserMsg], userMsg, assistantId, set, get);
       },
 
       async regenerate(assistantMessageId) {

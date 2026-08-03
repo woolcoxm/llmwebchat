@@ -19,3 +19,6 @@ data
 *.log
 .vite
 .DS_Store
+
+# CI workflow needs a token with workflow scope; force-add once enabled
+.github/workflows/ci.yml
