@@ -1,0 +1,22 @@
+{
+  "name": "llmwebchat",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An advanced, provider-agnostic LLM web chat interface — z.ai GLM + local models, full-agentic.",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --parallel --filter ./apps/* dev",
+    "dev:server": "pnpm --filter @llmwebchat/server dev",
+    "dev:web": "pnpm --filter @llmwebchat/web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r exec rm -rf dist node_modules .turbo"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "pnpm@11.20.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

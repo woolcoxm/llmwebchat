@@ -1,0 +1,80 @@
+import { useStore } from "../store.js";
+
+export function Sidebar() {
+  const open = useStore((s) => s.sidebarOpen);
+  const conversations = useStore((s) => s.conversations);
+  const activeId = useStore((s) => s.activeId);
+  const select = useStore((s) => s.selectConversation);
+  const del = useStore((s) => s.deleteConversation);
+  const newConv = useStore((s) => s.newConversation);
+  const setSettingsOpen = useStore((s) => s.setSettingsOpen);
+  const settings = useStore((s) => s.settings);
+
+  if (!open) return null;
+
+  return (
+    <aside className="w-64 shrink-0 h-full flex flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]">
+      <div className="p-3 flex items-center gap-2">
+        <div className="w-7 h-7 rounded-md bg-[var(--color-accent)] grid place-items-center text-white text-sm font-bold">
+          L
+        </div>
+        <div className="font-semibold tracking-tight">LLMWebChat</div>
+      </div>
+
+      <div className="px-3">
+        <button
+          onClick={newConv}
+          className="w-full mb-2 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] hover:border-[var(--color-accent)]/50 text-sm text-left flex items-center gap-2"
+        >
+          <span className="text-[var(--color-accent-fg)]">+</span> New chat
+        </button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5">
+        {conversations.length === 0 && (
+          <div className="px-3 py-8 text-center text-xs text-[var(--color-muted)]">
+            No conversations yet
+          </div>
+        )}
+        {conversations.map((c) => (
+          <div
+            key={c.id}
+            onClick={() => select(c.id)}
+            className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm ${
+              c.id === activeId
+                ? "bg-[var(--color-surface-2)] text-[var(--color-fg)]"
+                : "text-[var(--color-muted)] hover:bg-[var(--color-surface-2)]/50"
+            }`}
+          >
+            <span className="flex-1 truncate">{c.title}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                del(c.id);
+              }}
+              className="opacity-0 group-hover:opacity-100 text-[var(--color-muted)] hover:text-red-400"
+              title="Delete"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div className="p-3 border-t border-[var(--color-border)]">
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="w-full px-3 py-2 rounded-lg text-sm text-left text-[var(--color-muted)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-fg)] flex items-center gap-2"
+        >
+          ⚙ Settings
+          {settings?.providers.find((p) => p.id === settings.activeProviderId)?.hasKey ===
+            false && (
+            <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400">
+              no key
+            </span>
+          )}
+        </button>
+      </div>
+    </aside>
+  );
+}

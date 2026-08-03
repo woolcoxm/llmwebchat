@@ -1,0 +1,21 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# build output
+dist
+build
+web-dist
+.turbo
+*.tsbuildinfo
+
+# secrets & local data (settings.json holds API keys!)
+.env
+.env.local
+.env.*.local
+data
+
+# logs & caches
+*.log
+.vite
+.DS_Store
