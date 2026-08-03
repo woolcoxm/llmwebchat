@@ -38,15 +38,26 @@ function ToolBlocks({ msg, convId }: { msg: ChatMessage; convId: string }) {
       {msg.toolCalls.map((tc) => {
         const result = msg.toolResults?.find((r) => r.toolCallId === tc.id);
         const pending = msg.pendingApprovals?.find((p) => p.toolCallId === tc.id);
+        // Summarize the call from its JSON arguments for a legible header.
+        let args: any = {};
+        try { args = JSON.parse(tc.arguments || "{}"); } catch { /* keep raw */ }
+        const isBash = /bash|shell|run/.test(tc.name);
+        const isEdit = /edit|write|patch|create/.test(tc.name);
+        const isRead = /^read|grep|find|ls|list/.test(tc.name);
+        const summary =
+          isBash ? (args.command ?? args.cmd ?? tc.arguments) :
+          isEdit ? (args.path ?? args.file_path ?? args.filePath ?? "file") :
+          isRead ? (args.path ?? args.file_path ?? args.pattern ?? tc.arguments) :
+          (args.url ?? args.query ?? tc.arguments);
+        const icon = isBash ? "🖥️" : isEdit ? "✏️" : isRead ? "📖" : /search/.test(tc.name) ? "🔍" : "🔧";
         return (
-          <div
-            key={tc.id}
-            className="rounded-xl glass overflow-hidden text-[0.8rem]"
-          >
+          <div key={tc.id} className="rounded-xl glass overflow-hidden text-[0.8rem]">
             <div className="px-3 py-1.5 glass-strong flex items-center gap-2">
-              <span className="text-[var(--color-accent-fg)]">🔧 {tc.name}</span>
-              <span className="text-[var(--color-muted)] truncate">{tc.arguments}</span>
-              {pending && <span className="ml-auto text-[10px] text-amber-400">awaiting approval</span>}
+              <span>{icon}</span>
+              <span className="font-medium text-[var(--color-fg-dim)]">{tc.name}</span>
+              <span className="text-[var(--color-muted)] truncate font-mono text-[11px]">{String(summary).slice(0, 90)}</span>
+              {pending && <span className="ml-auto text-[10px] text-[var(--color-warn)]">awaiting approval</span>}
+              {!pending && result && <span className="ml-auto text-[10px] text-[var(--color-muted)]">{result.isError ? "⚠ error" : "✓"}</span>}
             </div>
             {pending && (
               <div className="px-3 py-2 flex items-center gap-2 border-t border-[var(--color-border)]">
@@ -62,7 +73,7 @@ function ToolBlocks({ msg, convId }: { msg: ChatMessage; convId: string }) {
               </div>
             )}
             {result && (
-              <pre className="px-3 py-2 whitespace-pre-wrap text-[var(--color-muted)] max-h-40 overflow-auto">
+              <pre className={`px-3 py-2 whitespace-pre-wrap max-h-44 overflow-auto font-mono text-[11px] ${isBash ? "bg-[#0c0a14] text-[var(--color-fg-dim)]" : "text-[var(--color-muted)]"}`}>
                 {result.content}
               </pre>
             )}
