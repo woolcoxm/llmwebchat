@@ -51,7 +51,7 @@ export function ChatView() {
 
   return (
     <div className="flex-1 flex flex-col h-full min-w-0">
-      <header className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--color-border)]">
+      <header className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--color-border)] glass">
         <button
           onClick={() => useStore.getState().toggleSidebar()}
           className="text-[var(--color-muted)] hover:text-[var(--color-fg)] lg:hidden"
@@ -116,49 +116,55 @@ export function ChatView() {
 
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
-          <div className="h-full grid place-items-center p-8">
-            <div className="text-center max-w-md">
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-[var(--color-accent)] grid place-items-center text-white text-2xl font-bold mb-4">
-                L
+          <div className="h-full grid place-items-center p-8 overflow-y-auto">
+            <div className="text-center max-w-lg w-full">
+              <div className="logo-mark w-16 h-16 mx-auto rounded-2xl grid place-items-center text-white text-3xl font-extrabold mb-5 animate-float">
+                π
               </div>
-              <h1 className="text-2xl font-semibold mb-2">LLMWebChat</h1>
+              <h1 className="text-3xl font-extrabold mb-2 tracking-tight">
+                <span className="gradient-text">Pi Studio</span>
+              </h1>
               <p className="text-[var(--color-muted)] mb-6">
-                A provider-agnostic chat, talking to{" "}
-                <span className="text-[var(--color-fg)]">{settings?.activeModel}</span> via{" "}
-                <span className="text-[var(--color-fg)]">{activeProvider?.name}</span>.
+                Your local-first agent studio.{" "}
+                {settings?.activeModel && activeProvider?.name
+                  ? <>Talking to <span className="text-[var(--color-fg-dim)]">{settings.activeModel}</span> via <span className="text-[var(--color-fg-dim)]">{activeProvider.name}</span>.</>
+                  : <span className="text-[var(--color-warn)]">No model selected yet — set one up below.</span>}
               </p>
+
               {providerWarning && (
-                <div className="mb-4 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-sm text-amber-300">
-                  {providerWarning}
+                <div className="mb-3 p-3 rounded-xl glass text-sm text-[var(--color-warn)] text-left flex items-start gap-2">
+                  <span>⚠️</span>
+                  <span className="flex-1">{providerWarning}</span>
+                  <button onClick={() => setSettingsOpen(true)} className="btn-primary text-xs px-2.5 py-1 rounded-lg shrink-0">Fix</button>
                 </div>
               )}
               {needsKey && (
-                <div className="mb-4 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-sm text-amber-300">
-                  This provider needs configuration (API key or a running local server).
-                  <button
-                    onClick={() => setSettingsOpen(true)}
-                    className="underline ml-1"
-                  >
-                    Open Settings →
-                  </button>
+                <div className="mb-3 p-3 rounded-xl glass text-sm text-[var(--color-warn)] text-left flex items-center gap-2">
+                  <span>🔑 This provider needs an API key.</span>
+                  <button onClick={() => setSettingsOpen(true)} className="btn-primary text-xs px-2.5 py-1 rounded-lg ml-auto">Open Settings</button>
                 </div>
               )}
-              <div className="flex flex-wrap gap-2 justify-center">
+
+              <div className="grid sm:grid-cols-2 gap-2 text-left">
                 {[
-                  "Explain transformers like I'm five",
-                  "Write a Python script to dedupe files",
-                  "Design a REST API for a todo app",
-                  "Compare RAG vs fine-tuning",
-                ].map((s) => (
+                  { t: "Explain a concept", s: "Explain transformers like I'm five" },
+                  { t: "Write code", s: "Write a Python script to dedupe files in a folder" },
+                  { t: "Design something", s: "Design a REST API for a todo app" },
+                  { t: "Compare options", s: "Compare RAG vs fine-tuning, briefly" },
+                ].map(({ t, s }) => (
                   <button
                     key={s}
                     onClick={() => useStore.getState().send(s)}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent)]/50 text-[var(--color-muted)] hover:text-[var(--color-fg)]"
+                    className="glass rounded-xl p-3 hover:ring-accent transition-all text-left group"
                   >
-                    {s}
+                    <div className="text-xs text-[var(--color-accent-fg)] mb-0.5">{t}</div>
+                    <div className="text-sm text-[var(--color-fg-dim)] group-hover:text-[var(--color-fg)]">{s}</div>
                   </button>
                 ))}
               </div>
+              <p className="text-[11px] text-[var(--color-muted)] mt-6">
+                Tip: enable <span className="text-[var(--color-accent-fg)]">🤖 agent</span> in the composer and point it at a project folder to give live instructions.
+              </p>
             </div>
           </div>
         ) : (

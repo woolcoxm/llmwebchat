@@ -36,26 +36,29 @@ export function Sidebar() {
   if (!open) return null;
 
   return (
-    <aside className="w-64 shrink-0 h-full flex flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)]">
-      <div className="p-3 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-md bg-[var(--color-accent)] grid place-items-center text-white text-sm font-bold">
-          L
+    <aside className="w-64 shrink-0 h-full flex flex-col border-r border-[var(--color-border)] glass">
+      <div className="p-3 flex items-center gap-2.5">
+        <div className="logo-mark w-8 h-8 rounded-xl grid place-items-center text-white font-extrabold text-lg animate-float">
+          π
         </div>
-        <div className="font-semibold tracking-tight">LLMWebChat</div>
+        <div>
+          <div className="font-bold tracking-tight leading-none gradient-text text-[15px]">Pi Studio</div>
+          <div className="text-[10px] text-[var(--color-muted)] mt-0.5">agent studio</div>
+        </div>
       </div>
 
       <div className="px-3">
         <button
           onClick={newConv}
-          className="w-full mb-2 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)] hover:border-[var(--color-accent)]/50 text-sm text-left flex items-center gap-2"
+          className="w-full mb-2 px-3 py-2 rounded-xl btn-primary text-sm text-left flex items-center gap-2 font-medium"
         >
-          <span className="text-[var(--color-accent-fg)]">+</span> New chat
+          <span>+</span> New chat
         </button>
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search conversations…"
-          className="w-full mb-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg px-3 py-1.5 text-xs outline-none focus:border-[var(--color-accent)]"
+          className="w-full mb-2 glass rounded-lg px-3 py-1.5 text-xs outline-none focus:ring-accent"
         />
         {allTags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
@@ -159,10 +162,10 @@ function ConvRow({
     <div
       onClick={() => select(c.id)}
       onDoubleClick={(e) => { e.stopPropagation(); setName(c.title); setRenaming(true); }}
-      className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm ${
+      className={`group flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer text-sm transition-colors ${
         c.id === activeId
-          ? "bg-[var(--color-surface-2)] text-[var(--color-fg)]"
-          : "text-[var(--color-muted)] hover:bg-[var(--color-surface-2)]/50"
+          ? "gradient-bg-soft text-[var(--color-fg)] ring-1 ring-[var(--color-border-strong)]"
+          : "text-[var(--color-muted)] hover:bg-[var(--color-surface-2)]"
       }`}
     >
       {c.pinned && <span className="text-[var(--color-accent-fg)] text-xs">📌</span>}

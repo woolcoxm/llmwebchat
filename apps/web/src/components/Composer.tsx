@@ -155,7 +155,7 @@ export function Composer() {
           )}
         </div>
 
-        <div className="relative rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] focus-within:border-[var(--color-accent)]/60 transition-colors">
+        <div className="relative rounded-2xl glass-strong focus-within:ring-accent transition-all">
           {attachments.length > 0 && (
             <div className="flex flex-wrap gap-2 p-2 pb-0">
               {attachments.map((a) => (
@@ -227,7 +227,7 @@ export function Composer() {
             {streaming ? (
               <button
                 onClick={stop}
-                className="w-9 h-9 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)] hover:border-red-500/50 text-[var(--color-fg)] grid place-items-center"
+                className="w-9 h-9 rounded-xl glass-strong text-[var(--color-danger)] grid place-items-center hover:ring-accent"
                 title="Stop"
               >
                 ■
@@ -236,7 +236,7 @@ export function Composer() {
               <button
                 onClick={submit}
                 disabled={!text.trim() && attachments.length === 0}
-                className="w-9 h-9 rounded-lg bg-[var(--color-accent)] text-white grid place-items-center disabled:opacity-30 hover:opacity-90"
+                className="w-9 h-9 rounded-xl btn-primary grid place-items-center text-lg"
                 title="Send"
               >
                 ↑
@@ -246,7 +246,7 @@ export function Composer() {
           </div>
         </div>
         <p className="text-center text-[11px] text-[var(--color-muted)]/70 mt-2">
-          {ctxTokens ? <span>≈ {ctxTokens.toLocaleString()} ctx tokens</span> : "Provider-agnostic"} · local & cloud models · secrets stay in the proxy · press <kbd className="text-[var(--color-fg)]">?</kbd> for shortcuts
+          {ctxTokens ? <span>≈ {ctxTokens.toLocaleString()} ctx tokens</span> : "Pi Studio"} · local-first · press <kbd className="text-[var(--color-fg)]">?</kbd> for shortcuts
         </p>
       </div>
     </div>

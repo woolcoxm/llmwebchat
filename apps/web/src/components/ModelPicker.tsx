@@ -46,34 +46,50 @@ export function ModelPicker() {
   };
   const setModel = (m: string) => settings && saveSettings({ ...settings, activeModel: m });
 
+  const noModels = merged.length === 0;
+
   return (
     <div className="flex items-center gap-1.5">
       <select
         value={activeProviderId}
         onChange={(e) => setProvider(e.target.value)}
-        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md px-2 py-1 text-[var(--color-fg)] outline-none focus:border-[var(--color-accent)] max-w-[150px]"
+        className="glass rounded-lg px-2.5 py-1.5 text-xs outline-none focus:ring-accent max-w-[150px]"
       >
         {settings?.providers.map((p) => (
-          <option key={p.id} value={p.id}>
+          <option key={p.id} value={p.id} className="bg-[var(--color-surface-solid)]">
             {p.name}
           </option>
         ))}
       </select>
       <span className="text-[var(--color-muted)]">/</span>
       <select
-        value={activeModel}
-        onChange={(e) => setModel(e.target.value)}
-        className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-md px-2 py-1 text-[var(--color-fg)] outline-none focus:border-[var(--color-accent)] max-w-[180px]"
+        value={noModels ? "__none__" : activeModel}
+        onChange={(e) => {
+          if (e.target.value !== "__none__") setModel(e.target.value);
+        }}
+        className={`glass rounded-lg px-2.5 py-1.5 text-xs outline-none focus:ring-accent max-w-[180px] ${noModels ? "text-[var(--color-warn)]" : ""}`}
       >
-        {loading && <option>loading…</option>}
+        {loading && <option className="bg-[var(--color-surface-solid)]">loading…</option>}
+        {noModels && !loading && (
+          <option value="__none__" className="bg-[var(--color-surface-solid)]">⚠ No model — click setup</option>
+        )}
         {merged.map((m) => (
-          <option key={m.id} value={m.id}>
+          <option key={m.id} value={m.id} className="bg-[var(--color-surface-solid)]">
             {m.name ?? m.id}
-            {m.reasoning ? " 🧠" : ""}
+            {m.reasoning ? " 🧂" : ""}
             {m.vision ? " 👁" : ""}
           </option>
         ))}
       </select>
+      {noModels && !loading && (
+        <button
+          onClick={() => useStore.getState().setSettingsOpen(true)}
+          className="text-xs px-2 py-1 rounded-lg btn-primary"
+          title="Set up a model"
+        >
+          Set up
+        </button>
+      )}
     </div>
   );
 }

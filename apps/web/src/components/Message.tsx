@@ -8,7 +8,7 @@ import { postApproval } from "../lib/api.js";
 function ReasoningBlock({ text }: { text: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="mb-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+    <div className="mb-3 rounded-xl glass overflow-hidden">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--color-muted)] hover:bg-[var(--color-surface-2)]"
@@ -41,9 +41,9 @@ function ToolBlocks({ msg, convId }: { msg: ChatMessage; convId: string }) {
         return (
           <div
             key={tc.id}
-            className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden text-[0.8rem]"
+            className="rounded-xl glass overflow-hidden text-[0.8rem]"
           >
-            <div className="px-3 py-1.5 bg-[var(--color-surface-2)] flex items-center gap-2">
+            <div className="px-3 py-1.5 glass-strong flex items-center gap-2">
               <span className="text-[var(--color-accent-fg)]">🔧 {tc.name}</span>
               <span className="text-[var(--color-muted)] truncate">{tc.arguments}</span>
               {pending && <span className="ml-auto text-[10px] text-amber-400">awaiting approval</span>}
@@ -95,17 +95,17 @@ export function Message({ msg, streaming }: { msg: ChatMessage; streaming?: bool
     <div className="px-4 py-5 md:px-0">
       <div className="max-w-3xl mx-auto flex gap-3 md:gap-4">
         <div
-          className={`shrink-0 w-7 h-7 rounded-md grid place-items-center text-xs font-medium ${
+          className={`shrink-0 w-8 h-8 rounded-xl grid place-items-center text-xs font-bold ${
             isUser
-              ? "bg-[var(--color-accent)] text-white"
-              : "bg-[var(--color-surface-2)] text-[var(--color-accent-fg)] border border-[var(--color-border)]"
+              ? "glass-strong text-[var(--color-fg-dim)]"
+              : "logo-mark text-white"
           }`}
         >
-          {isUser ? "You" : "AI"}
+          {isUser ? "You" : "π"}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-[11px] text-[var(--color-muted)] mb-1">
-            {isUser ? "You" : msg.model ?? "assistant"}
+          <div className="text-[11px] text-[var(--color-muted)] mb-1.5 flex items-center gap-2">
+            <span className="font-medium text-[var(--color-fg-dim)]">{isUser ? "You" : msg.model ?? "Pi"}</span>
           </div>
           {msg.reasoning && <ReasoningBlock text={msg.reasoning} />}
           <ToolBlocks msg={msg} convId={activeId ?? ""} />

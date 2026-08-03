@@ -13,9 +13,9 @@ export default defineConfig({
       injectRegister: "inline",
       includeAssets: ["icon.svg", "apple-touch-icon.png"],
       manifest: {
-        name: "LLMWebChat",
-        short_name: "LLMWebChat",
-        description: "An advanced, provider-agnostic LLM web chat interface.",
+        name: "Pi Studio",
+        short_name: "Pi Studio",
+        description: "A polished, local-first agent studio — the GUI for pi + your local LLM.",
         theme_color: "#0a0a0b",
         background_color: "#0a0a0b",
         display: "standalone",

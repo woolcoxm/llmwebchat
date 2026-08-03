@@ -1,17 +1,33 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
 @import "tailwindcss";
 @import "highlight.js/styles/github-dark.css";
 @import "katex/dist/katex.min.css";
 
-/* Tailwind v4 dark-first theme tokens via @theme */
+/* ───────────────────────── Pi Studio · design tokens ─────────────────────────
+   Aesthetic: "Bolt" — warm, playful, gradient-forward, glassy dark canvas. */
 @theme {
-  --color-bg: #0a0a0b;
-  --color-surface: #131316;
-  --color-surface-2: #1b1b20;
-  --color-border: #27272a;
-  --color-fg: #e7e7ea;
-  --color-muted: #8b8b94;
-  --color-accent: #6366f1;
-  --color-accent-fg: #c7d2fe;
+  /* warm-tinted dark canvas */
+  --color-bg: #0a0910;
+  --color-bg-2: #0d0b16;
+  --color-surface: rgba(255, 255, 255, 0.04);
+  --color-surface-2: rgba(255, 255, 255, 0.07);
+  --color-surface-solid: #15121f;
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+  --color-fg: #f4f1fb;
+  --color-fg-dim: #c9c2dc;
+  --color-muted: #8b83a3;
+  --color-accent: #7c5cff;
+  --color-accent-2: #b14bff;
+  --color-accent-3: #ff5ca7;
+  --color-accent-fg: #d9ccff;
+  --color-success: #34d399;
+  --color-warn: #fbbf24;
+  --color-danger: #fb7185;
+  --gradient-accent: linear-gradient(135deg, #7c5cff 0%, #b14bff 45%, #ff5ca7 100%);
+  --gradient-accent-soft: linear-gradient(135deg, rgba(124, 92, 255, 0.18), rgba(255, 92, 167, 0.18));
+  --glow-accent: 0 0 0 1px rgba(124, 92, 255, 0.4), 0 8px 30px -8px rgba(177, 75, 255, 0.5);
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
@@ -25,119 +41,138 @@ body {
   margin: 0;
   background: var(--color-bg);
   color: var(--color-fg);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  /* ambient gradient glow on the canvas */
+  background-image:
+    radial-gradient(60rem 60rem at 85% -10%, rgba(177, 75, 255, 0.16), transparent 60%),
+    radial-gradient(50rem 50rem at -10% 110%, rgba(255, 92, 167, 0.12), transparent 55%),
+    radial-gradient(40rem 40rem at 50% 120%, rgba(124, 92, 255, 0.1), transparent 60%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(177, 75, 255, 0.35);
+  color: #fff;
 }
 
 /* Scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #3f3f46 transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
 }
 *::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #3f3f46;
+  background: rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+  background-clip: content-box;
+}
 
-/* Markdown */
-.prose-chat {
-  line-height: 1.65;
-  font-size: 0.95rem;
+/* ───────────────────────── utilities ───────────────────────── */
+.font-sans { font-family: var(--font-sans); }
+.font-mono { font-family: var(--font-mono); }
+
+.gradient-text {
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
-.prose-chat p {
-  margin: 0.6em 0;
-}
-.prose-chat h1,
-.prose-chat h2,
-.prose-chat h3 {
-  font-weight: 600;
-  margin: 1em 0 0.5em;
-  line-height: 1.3;
-}
-.prose-chat h1 {
-  font-size: 1.4em;
-}
-.prose-chat h2 {
-  font-size: 1.2em;
-}
-.prose-chat h3 {
-  font-size: 1.05em;
-}
-.prose-chat ul,
-.prose-chat ol {
-  margin: 0.5em 0;
-  padding-left: 1.5em;
-}
-.prose-chat li {
-  margin: 0.25em 0;
-}
-.prose-chat a {
-  color: var(--color-accent-fg);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.prose-chat blockquote {
-  border-left: 3px solid var(--color-border);
-  padding-left: 1em;
-  color: var(--color-muted);
-  margin: 0.75em 0;
-}
-.prose-chat table {
-  border-collapse: collapse;
-  margin: 0.75em 0;
-  font-size: 0.9em;
-}
-.prose-chat th,
-.prose-chat td {
+.gradient-bg { background: var(--gradient-accent); }
+.gradient-bg-soft { background: var(--gradient-accent-soft); }
+
+/* glassy panel */
+.glass {
+  background: var(--color-surface);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
   border: 1px solid var(--color-border);
-  padding: 0.4em 0.7em;
-  text-align: left;
 }
-.prose-chat th {
+.glass-strong {
   background: var(--color-surface-2);
-}
-.prose-chat pre {
-  background: #0d1117 !important;
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 0.9em 1em;
+}
+
+.glow { box-shadow: var(--glow-accent); }
+.ring-accent { box-shadow: 0 0 0 1px rgba(124, 92, 255, 0.5), 0 0 24px -6px rgba(177, 75, 255, 0.6); }
+
+/* primary button */
+.btn-primary {
+  background: var(--gradient-accent);
+  color: #fff;
+  box-shadow: 0 6px 20px -8px rgba(177, 75, 255, 0.7);
+  transition: transform 0.08s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+.btn-primary:hover { filter: brightness(1.08); box-shadow: 0 10px 28px -8px rgba(177, 75, 255, 0.85); }
+.btn-primary:active { transform: translateY(1px); }
+.btn-primary:disabled { opacity: 0.4; box-shadow: none; filter: none; }
+
+/* logo mark */
+.logo-mark {
+  background: var(--gradient-accent);
+  box-shadow: 0 6px 18px -6px rgba(177, 75, 255, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* ───────────────────────── animations ───────────────────────── */
+@keyframes float-glow {
+  0%, 100% { transform: translateY(0); filter: brightness(1); }
+  50% { transform: translateY(-6px); filter: brightness(1.12); }
+}
+.animate-float { animation: float-glow 6s ease-in-out infinite; }
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 37%, rgba(255,255,255,0.04) 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+/* ───────────────────────── markdown ───────────────────────── */
+.prose-chat { line-height: 1.7; font-size: 0.95rem; }
+.prose-chat p { margin: 0.6em 0; }
+.prose-chat h1, .prose-chat h2, .prose-chat h3 { font-weight: 700; margin: 1.1em 0 0.5em; line-height: 1.3; letter-spacing: -0.01em; }
+.prose-chat h1 { font-size: 1.45em; }
+.prose-chat h2 { font-size: 1.22em; }
+.prose-chat h3 { font-size: 1.06em; }
+.prose-chat ul, .prose-chat ol { margin: 0.5em 0; padding-left: 1.5em; }
+.prose-chat li { margin: 0.28em 0; }
+.prose-chat a { color: var(--color-accent-fg); text-decoration: underline; text-underline-offset: 2px; }
+.prose-chat blockquote { border-left: 3px solid var(--color-accent-2); padding-left: 1em; color: var(--color-muted); margin: 0.75em 0; }
+.prose-chat table { border-collapse: collapse; margin: 0.75em 0; font-size: 0.9em; }
+.prose-chat th, .prose-chat td { border: 1px solid var(--color-border); padding: 0.45em 0.7em; text-align: left; }
+.prose-chat th { background: var(--color-surface-2); }
+.prose-chat pre {
+  background: #0c0a14 !important;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 0.95em 1em;
   overflow-x: auto;
   margin: 0.75em 0;
   font-size: 0.85rem;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
-.prose-chat pre code {
-  background: transparent !important;
-  padding: 0 !important;
-  font-family: var(--font-mono);
-}
-.prose-chat code {
-  background: var(--color-surface-2);
-  border-radius: 4px;
-  padding: 0.12em 0.35em;
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-}
-.prose-chat hr {
-  border: none;
-  border-top: 1px solid var(--color-border);
-  margin: 1em 0;
-}
+.prose-chat pre code { background: transparent !important; padding: 0 !important; font-family: var(--font-mono); }
+.prose-chat code { background: var(--color-surface-2); border-radius: 6px; padding: 0.14em 0.4em; font-family: var(--font-mono); font-size: 0.85em; }
+.prose-chat hr { border: none; border-top: 1px solid var(--color-border); margin: 1em 0; }
 
 /* streaming caret */
 .stream-caret::after {
   content: "▍";
   margin-left: 1px;
   animation: blink 1s steps(2, start) infinite;
-  color: var(--color-accent);
+  color: var(--color-accent-2);
 }
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
+@keyframes blink { 50% { opacity: 0; } }
