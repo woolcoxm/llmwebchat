@@ -11,11 +11,13 @@ import { ConvSettings } from "./components/ConvSettings.js";
 import { BranchCompare } from "./components/BranchCompare.js";
 import { ShortcutsHelp } from "./components/ShortcutsHelp.js";
 import { Workspace } from "./components/Workspace.js";
+import { Onboarding } from "./components/Onboarding.js";
 import { useStore } from "./store.js";
 
 export default function App() {
   const loadSettings = useStore((s) => s.loadSettings);
   const settingsLoading = useStore((s) => s.settingsLoading);
+  const onboarded = useStore((s) => s.onboarded);
   const conversations = useStore((s) => s.conversations);
   const activeId = useStore((s) => s.activeId);
   const newConversation = useStore((s) => s.newConversation);
@@ -70,6 +72,7 @@ export default function App() {
       <ConvSettings />
       <BranchCompare />
       <ShortcutsHelp />
+      {!onboarded && !settingsLoading && <Onboarding />}
     </div>
   );
 }

@@ -137,6 +137,8 @@ interface AppState {
   setHelpOpen: (b: boolean) => void;
   workspaceOpen: boolean;
   setWorkspaceOpen: (b: boolean) => void;
+  onboarded: boolean;
+  completeOnboarding: () => void;
   /** Make `msgId` the active tip by repointing activeChild along its path from root. */
   activatePathTo: (convId: string, msgId: string) => void;
 
@@ -777,6 +779,11 @@ export const useStore = create<AppState>()(
       workspaceOpen: false,
       setWorkspaceOpen(b) {
         set({ workspaceOpen: b });
+      },
+      onboarded: typeof localStorage !== "undefined" && localStorage.getItem("pistudio-onboarded") === "1",
+      completeOnboarding() {
+        try { localStorage.setItem("pistudio-onboarded", "1"); } catch { /* noop */ }
+        set({ onboarded: true });
       },
       activatePathTo(convId, msgId) {
         const msgs = get().messagesByConv[convId] ?? [];
