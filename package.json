@@ -5,9 +5,10 @@
   "description": "An advanced, provider-agnostic LLM web chat interface — z.ai GLM + local models, full-agentic.",
   "type": "module",
   "scripts": {
-    "dev": "pnpm --filter @llmwebchat/server dev & pnpm --filter @llmwebchat/web dev & wait",
+    "dev": "concurrently -n server,web -c magenta,cyan \"pnpm --filter @llmwebchat/server dev\" \"pnpm --filter @llmwebchat/web dev\"",
     "dev:server": "pnpm --filter @llmwebchat/server dev",
     "dev:web": "pnpm --filter @llmwebchat/web dev",
+    "start": "pnpm --filter @llmwebchat/server start",
     "build": "pnpm -r build",
     "icons": "node scripts/gen-icons.mjs",
     "typecheck": "pnpm -r typecheck",
@@ -16,6 +17,7 @@
     "clean": "pnpm -r exec rm -rf dist node_modules .turbo"
   },
   "devDependencies": {
+    "concurrently": "^10.0.4",
     "sharp": "^0.35.3",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"

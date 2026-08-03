@@ -57,30 +57,27 @@ apps/
 ## 🚀 Quick start
 
 ```bash
-# 1. Install everything (monorepo)
 pnpm install
-
-# 2. (Optional) pre-seed a provider key into the proxy
-cp .env.example .env
-#   edit .env as needed
-
-# 3. Dev mode — runs proxy (:8787) + web (:5173) together
-pnpm dev
-#   then open http://localhost:5173
 ```
-In dev, the web app proxies `/api/*` to `:8787`, so you use one origin. Configure providers and add API keys in **Settings** (gear icon) — stored in `apps/server/data/settings.json` (gitignored).
 
-## 📦 Production / single-port build
-
+**Option A — Dev with hot reload** (recommended while building):
 ```bash
-pnpm build                 # builds web → apps/server/web-dist, compiles proxy
-cd apps/server
-PORT=8787 node dist/index.js   # serves SPA + API on http://localhost:8787
+pnpm dev            # one command (needs a POSIX/Windows shell with `ps`)
+# …or two terminals if `pnpm dev` misbehaves on your OS:
+#   pnpm dev:server   # proxy on :8787
+#   pnpm dev:web      # vite on  :5173  ← open this
 ```
+
+**Option B — Production single-port** (simplest, most reliable — one server serves UI + API):
+```bash
+pnpm build && pnpm start     # → http://localhost:8787
+```
+
+Then open the URL. In dev the web app proxies `/api/*` to `:8787`. Configure providers and add API keys in **Settings** (gear icon) — stored in `apps/server/data/settings.json` (gitignored).
 
 ## 🔧 Configuration
 Everything is configurable from the **Settings** UI:
-- **Providers** — edit built-ins (z.ai, Ollama, OpenRouter, LM Studio) or **+ Add** a custom OpenAI-compatible endpoint (name, base URL, API key)
+- **Providers** — edit built-ins (Ollama, OpenRouter, LM Studio) or **+ Add** a custom OpenAI-compatible endpoint (name, base URL, API key)
 - **Active provider/model** — pick from the composer's dropdowns (live `/models` discovery)
 - **Default system prompt**, **reasoning effort**, **tools on/off** are per-turn in the composer
 
