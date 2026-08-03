@@ -13,7 +13,7 @@ export interface Artifact {
   previewable: boolean;
 }
 
-const PREVIEWABLE = new Set(["html", "svg", "mermaid"]);
+const PREVIEWABLE = new Set(["html", "svg", "mermaid", "chart"]);
 const RUNNABLE = new Set(["python", "py"]);
 
 const FENCE = /```([\w+-]+)?\n([\s\S]*?)```/g;
@@ -45,6 +45,7 @@ function filenameFor(lang: string, i: number): string {
     html: "html",
     svg: "svg",
     mermaid: "mmd",
+    chart: "chart.json",
     python: "py",
     py: "py",
     javascript: "js",
