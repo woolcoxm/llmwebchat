@@ -9,16 +9,17 @@
 ## ✨ What's here now
 - **Provider-agnostic** — Ollama, LM Studio, OpenRouter, or any custom OpenAI-compatible URL, all behind one client
 - **Reasoning stream** — model reasoning/thinking output rendered in a collapsible panel, with per-message effort control for reasoning-capable providers
-- **Conversation branching/forking** — tree model; regenerate, edit-and-resubmit, continue (prefill), branch navigation; **fork to new chat**, **branch diff/compare**, conversation **tree graph** view
-- **Per-conversation settings** — system prompt, model, temperature overrides per chat
+- **Conversation branching/forking** — tree model; regenerate, edit-and-resubmit, continue (prefill), branch navigation; **fork to new chat**, **branch diff/compare**, **compact (summarize→new chat)**, conversation **tree graph** view; tags + pin + inline rename
+- **Per-conversation settings** — system prompt, model, temperature overrides per chat; **global memory** recalled across all chats
 - **Artifacts panel** — live preview for HTML/SVG/Mermaid/**charts (Recharts)** + in-browser **Python (Pyodide)** execution; auto-opens for previewable blocks
 - **Multimodal** — attach images for vision + **text documents** (txt/md/code/json/csv → context)
 - **Multi-model Arena** — stream one prompt across 2–4 models side-by-side, pick a 🏆 winner
-- **Agentic tools** — `web_search`, `web_reader` (SSRF-guarded), `read_file`, `write_file`, `run_bash` (sandboxed); multi-round loop; **human-in-the-loop approvals** for destructive tools
+- **Agentic tools** — `web_search`, `web_reader` (SSRF-guarded), `read_file`, `write_file`, `run_bash` (sandboxed); **custom HTTP tools**; multi-round loop; **human-in-the-loop approvals** for destructive tools
 - **MCP client** — connect any stdio Model Context Protocol server; its tools become callable
 - **Knowledge base (RAG)** — ingest docs (chunked + embedded), retrieve via `knowledge_search`
 - **Voice** — STT dictation + TTS speak (Web Speech API, zero deps)
-- ⌨ **Power UX** — command palette (⌘K), global shortcuts (`?` for help), conversation search/pin/auto-title, prompt snippets, Markdown + **JSON backup** export/import, token + context display, accent-color theming
+- ⌨ **Power UX** — command palette (⌘K), global shortcuts (`?` for help), quick message actions (summarize/explain), conversation search/pin/tags/auto-title, prompt snippets, Markdown + **JSON backup** export/import, token + context display, accent-color theming, error boundary
+- 📱 **PWA** — installable + offline app shell (service worker precaches the UI; API is never cached)
 - **Secrets stay in the proxy** — API keys never reach the browser; masked in the UI
 - **Graceful offline** — local runners (Ollama) with live `/models` discovery and preset fallback
 
